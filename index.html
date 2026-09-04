@@ -138,39 +138,6 @@ html, body {
   transition: opacity 0.2s ease;
 }
 
-/* 表情バッジ(絵文字で「今どういう感情か」を誰が見ても分かるようにする) */
-.mood-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 8;
-  font-size: 34px;
-  line-height: 1;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.7));
-  opacity: 0;
-  transform: scale(0.3) rotate(-15deg);
-  pointer-events: none;
-}
-
-.mood-badge.show {
-  animation: moodBadgePop 0.35s cubic-bezier(.3,1.6,.4,1) forwards;
-}
-
-@keyframes moodBadgePop {
-  0%   { opacity: 0; transform: scale(0.3) rotate(-15deg); }
-  60%  { opacity: 1; transform: scale(1.25) rotate(6deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0deg); }
-}
-
-.mood-badge.persist {
-  animation: moodBadgePop 0.35s cubic-bezier(.3,1.6,.4,1) forwards, moodBadgeBob 0.9s ease-in-out 0.35s infinite;
-}
-
-@keyframes moodBadgeBob {
-  0%, 100% { transform: scale(1) translateY(0); }
-  50%      { transform: scale(1) translateY(-4px); }
-}
-
 /* 魔神撃破演出:大爆発→吹き飛び→消滅(数秒かけて) */
 .hero.defeated {
   animation: heroDefeat 3.2s cubic-bezier(.4,0,.2,1) forwards;
@@ -789,33 +756,68 @@ html, body {
   opacity: 0.6;
 }
 
+.answer-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.answer-label-row .answer-label {
+  margin: 0;
+}
+
+.voice-hint {
+  font-size: 10.5px;
+  color: #d9c6ff;
+  background: rgba(139, 92, 246, 0.22);
+  border: 1px solid rgba(196, 160, 255, 0.4);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+/* マイクボタンは「押せる」ことがひと目で分かるよう、常時目立つ配色にする */
 .mic-btn {
   position: absolute;
   right: 6px;
   bottom: 6px;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  border: 1px solid #4a2f7a;
-  background: #1c1030;
-  color: #d9c6ff;
-  font-size: 15px;
+  border: 1px solid #b98cff;
+  background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mic-btn {
+    animation: micIdlePulse 2.2s ease-in-out infinite;
+  }
+}
+
+@keyframes micIdlePulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.55); }
+  50%      { box-shadow: 0 0 16px rgba(139, 92, 246, 0.95); }
 }
 
 .mic-btn:disabled {
   opacity: 0.5;
   cursor: default;
+  animation: none;
 }
 
 .mic-btn.listening {
   background: #ff2d6a;
   border-color: #ff8fb3;
   color: #fff;
+  animation: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -827,6 +829,70 @@ html, body {
 @keyframes micPulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 45, 106, 0.6); }
   50%      { box-shadow: 0 0 0 8px rgba(255, 45, 106, 0); }
+}
+
+/* 初回だけ表示する、マイクボタンの使い方ヒント */
+.mic-first-tip {
+  position: absolute;
+  bottom: 42px;
+  right: -6px;
+  width: 84px;
+  font-size: 10.5px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #1a0933;
+  background: #ffd166;
+  border-radius: 10px;
+  padding: 6px 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  opacity: 0;
+  transform: translateY(4px) scale(0.9);
+  pointer-events: none;
+}
+
+.mic-first-tip::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  right: 14px;
+  border: 6px solid transparent;
+  border-top-color: #ffd166;
+}
+
+.mic-first-tip.show {
+  animation: micTipShow 0.3s ease forwards, micTipHide 0.3s ease 3.2s forwards;
+}
+
+@keyframes micTipShow {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes micTipHide {
+  to { opacity: 0; transform: translateY(4px) scale(0.9); }
+}
+
+/* 音声認識中であることを示すステータス表示 */
+.voice-status {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  font-size: 10.5px;
+  color: #fff;
+  font-weight: 700;
+  background: rgba(255, 45, 106, 0.85);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .voice-status {
+    animation: voiceStatusBlink 1s ease-in-out infinite;
+  }
+}
+
+@keyframes voiceStatusBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
 }
 
 .answer-input.empty-warning {
@@ -1275,7 +1341,6 @@ html, body {
       <p id="bossLine">「フハハハハ…挑戦者よ…その大喜利、俺を笑わせることができるかな?」</p>
     </div>
     <div class="hero-glow-overlay" id="heroGlowOverlay"></div>
-    <p class="mood-badge" id="moodBadge"></p>
     <div class="impact-burst" id="impactBurst"></div>
     <p class="impact-text" id="impactText">ぐはっ!!</p>
     <p class="scream-text" id="screamText">ぐああああああっ!!</p>
@@ -1330,10 +1395,17 @@ html, body {
       </div>
     </div>
 
-    <p class="answer-label">あなたの回答</p>
+    <div class="answer-label-row">
+      <p class="answer-label">あなたの回答</p>
+      <span class="voice-hint" id="voiceHint" hidden>🎤 音声入力できます</span>
+    </div>
     <div class="answer-input-wrap">
       <textarea id="answerInput" class="answer-input" rows="3" maxlength="50" placeholder="ここに回答を入力…"></textarea>
-      <button id="micBtn" class="mic-btn" type="button" title="音声入力" hidden>🎤</button>
+      <button id="micBtn" class="mic-btn" type="button" title="音声入力" hidden>
+        🎤
+        <span class="mic-first-tip" id="micFirstTip">タップで<br>音声入力!</span>
+      </button>
+      <span class="voice-status" id="voiceStatus" hidden>🎙️ 聞き取り中…</span>
     </div>
     <div class="char-count"><span id="charCount">0</span>/50</div>
 
@@ -1561,7 +1633,337 @@ html, body {
     { text: 'こんなラーメン屋には二度と行かない、どんなラーメン屋？', model: '「お客様の今日の運勢」がスープに浮いている' },
     { text: '結婚式のスピーチで、新郎の上司がまさかのことを暴露した。何を暴露した？', model: '新郎が入社面接で言った志望動機を今も覚えていて全部読み上げた' },
     { text: '未来の学校で導入された、まさかの授業とは？', model: '「言い訳の作り方」が必修科目になっている' },
-    { text: '道端で拾った謎の壺、実は中身がとんでもなかった。その中身とは？', model: '中に隣人からの家賃の督促状が丸めて入っていた' }
+    { text: '道端で拾った謎の壺、実は中身がとんでもなかった。その中身とは？', model: '中に隣人からの家賃の督促状が丸めて入っていた' },
+
+    // ----- 学校 -----
+    { text: '転校初日、自己紹介で先生に止められるレベルの発言をした。何て言った？', model: '「前世は学級委員長でした」' },
+    { text: 'この学校の校則、いくらなんでも厳しすぎる。どんな校則？', model: '「日直は前世の徳を積んだ者から選出」' },
+    { text: '体育の授業、まさかの種目が追加された。何の種目？', model: '「保護者との腕相撲」' },
+    { text: '給食の献立、ある日突然おかしくなった。何が出た？', model: '「先生の手作り人生相談スープ」' },
+    { text: '文化祭の出し物、担任が却下した企画とは？', model: '「校長先生のモノマネ選手権」' },
+    { text: '修学旅行のしおりに、まさかの持ち物が指定されていた。それは？', model: '「三日分の言い訳」' },
+    { text: '保健室の先生が渡してくれた、まさかの処方箋とは？', model: '「休み時間延長券(使用一回限り)」' },
+    { text: '卒業アルバムの一言コメント、先生が書いた予想外の内容とは？', model: '「次会うときは敬語な」' },
+    { text: '数学の授業中、先生が突然言い出したこととは？', model: '「今日はテストの代わりに人生相談をします」' },
+    { text: '部活の顧問が新入部員に配った、まさかの入部特典とは？', model: '「顧問の説教が5分間免除券」' },
+    { text: '図書室に新設された、変わったコーナーとは？', model: '「言い訳の名著コーナー」' },
+    { text: '学級会で急に議題に上がった、まさかの案件とは？', model: '「席替えの公平性について国連レベルで審議」' },
+    { text: '遠足のバスレクで盛り上がった、まさかのゲームとは？', model: '「先生の若い頃の黒歴史クイズ」' },
+    { text: '高校の入学式、校長のあいさつが長すぎて起きたこととは？', model: '新入生の半分が友達になっていた' },
+    { text: '塾の講師がテスト前日に言った、まさかの一言とは？', model: '「今日はもう寝ろ、以上」' },
+    { text: '委員会活動で新しくできた、謎の役職とは？', model: '「校内言い訳監査委員」' },
+    { text: '学校の怪談、実は元ネタがしょうもなかった。その正体とは？', model: '用務員さんの独り言' },
+    { text: '定期テストの裏に書かれていた、まさかの一言とは？', model: '「頑張った跡は見える、点数は見えない」' },
+    { text: 'クラス対抗の合唱コンクール、まさかの反則行為とは？', model: '隣のクラスの歌詞をこっそり替える' },
+    { text: '卒業式の答辞、まさかの内容で泣けなかった。何を言った？', model: '三年間の給食費未納について' },
+
+    // ----- 恋愛 -----
+    { text: '告白の返事、まさかの言い方をされた。何て言われた？', model: '「稟議中です」' },
+    { text: 'デート中、恋人が急に真剣な顔で言い出したこととは？', model: '「奢った分、後で経費精算しといて」' },
+    { text: '別れ話でまさかの理由を告げられた。その理由とは？', model: '「推しと結婚することになった」' },
+    { text: '婚活パーティーで自己PRタイム、まさかの内容を話した。何を話した？', model: '「借金はありません(小声で今のところは)」' },
+    { text: '遠距離恋愛のカップル、まさかの連絡手段を使っていた。それは？', model: '伝書鳩(既読無視対策)' },
+    { text: 'プロポーズの言葉、緊張しすぎてまさかのセリフになった。何て言った？', model: '「今後ともよろしくお願いいたします」' },
+    { text: '恋人にドン引きされた、まさかの部屋の中身とは？', model: '元カノからの手紙で作った折り鶴千羽' },
+    { text: '合コンで場が凍った、まさかの自己紹介とは？', model: '「趣味は前世の記憶を辿ることです」' },
+    { text: '結婚記念日に渡されたプレゼント、まさかの中身とは？', model: '離婚届(白紙・記念品扱い)' },
+    { text: '恋人の親に挨拶に行った時、まさかの質問をされた。何を聞かれた？', model: '「うちの子の何番目の恋人ですか」' },
+    { text: '復縁を迫られた時の断り文句、まさかの内容とは？', model: '「今の推しの方が返信早いので」' },
+    { text: 'マッチングアプリのプロフィール、盛りすぎて起きたこととは？', model: '初対面で別人と間違えられた' },
+    { text: '恋人が急に泣き出した理由、まさかのことだった。何があった？', model: '推しグループが解散した' },
+    { text: '好きな人へのLINE、送信取り消しし忘れた内容とは？', model: '「今夜告白しますテンプレ その3」' },
+    { text: 'デートの待ち合わせで恋人が固まっていた理由とは？', model: '同じ服を着た元恋人が後ろにいた' },
+    { text: '恋愛相談に乗ってもらったら、まさかのアドバイスをされた。何て言われた？', model: '「占い師変えたら？」' },
+    { text: '恋人の実家に泊まった夜、まさかの家庭内ルールを知った。それは？', model: '21時以降は家族全員で瞑想' },
+    { text: '好きな人にした告白、変換ミスでまさかの内容になった。何になった？', model: '「好きです」が「透きです」に' },
+    { text: '同窓会で再会した元恋人、まさかの近況報告をしてきた。何を話した？', model: '「今、君のそっくりさんと結婚してる」' },
+    { text: '結婚式のスピーチで友人がやらかした、まさかの暴露とは？', model: '新婦の合コン参戦履歴を年表で発表' },
+
+    // ----- 芸能・エンタメ -----
+    { text: '人気アイドルが引退会見で明かした、まさかの引退理由とは？', model: '「実家の八百屋を継ぐため」' },
+    { text: '大物俳優の楽屋に貼られていた、まさかの張り紙とは？', model: '「セリフは自分で考えるな」' },
+    { text: '音楽番組の生放送中に起きた、まさかのハプニングとは？', model: '歌詞を全部替え歌で歌ってしまった' },
+    { text: '人気バンドの結成秘話、実はしょうもなかった。その内容とは？', model: 'カラオケの精算でメンバーが揃った' },
+    { text: '有名俳優のインタビューで飛び出した、まさかの本音とは？', model: '「実は演技が一切できません」' },
+    { text: '賞レースの受賞スピーチ、まさかの内容で会場が凍った。何を言った？', model: '「この賞、正直誰でも獲れます」' },
+    { text: '人気声優の楽屋での意外な素顔とは？', model: 'セリフより先に台本のシワを伸ばす' },
+    { text: '芸能人の結婚会見、まさかの馴れ初めを暴露した。それは？', model: '相手の忘れ物を10回届けて仲良くなった' },
+    { text: 'お笑い芸人がネタ中に飛ばした、まさかのアドリブとは？', model: '観客の忘れ物を勝手に返す' },
+    { text: '人気ドラマの撮影現場、まさかのNG理由とは？', model: '共演者の物真似が似すぎて笑ってしまう' },
+    { text: '有名歌手のライブMC、まさかの内容で盛り下がった。何を話した？', model: '今日の交通費の話' },
+    { text: 'アイドルグループの合宿、まさかのルールがあった。それは？', model: '敬語禁止、ただし説教はタメ口厳禁' },
+    { text: '映画の完成披露試写会、まさかの質問が飛んだ。何を聞かれた？', model: '「一番高かった小道具は何ですか」' },
+    { text: '人気俳優の楽屋メシ、まさかのこだわりがあった。それは？', model: 'セリフの多い日はカレー、少ない日はうどん' },
+    { text: '音楽フェスの出演者リストに、まさかの名前が紛れ込んでいた。誰？', model: '近所の高校の吹奏楽部' },
+    { text: '大御所芸能人の若手への一言、まさかの内容だった。何と言った？', model: '「その髪型、俺の方が先にやってた」' },
+    { text: '人気バラエティ番組の企画会議、まさかの理由で却下された企画とは？', model: '出演者全員が本気で嫌がった' },
+    { text: '有名タレントの自宅、まさかの部屋があった。それは？', model: 'ファンレターの返事を考える専用の部屋' },
+    { text: '芸能人が明かした、デビュー前のまさかのアルバイトとは？', model: '着ぐるみの中で台本を覚えていた' },
+    { text: '音楽番組の裏側、まさかの出来事とは？', model: '出番直前に衣装のチャックが直らず本番中もずっと気にしてた' },
+
+    // ----- 動物 -----
+    { text: '動物園のパンダ、実はまさかの特技を持っていた。それは？', model: '飼育員のモノマネ' },
+    { text: '飼い犬が家出した理由、まさかのことだった。何があった？', model: 'ドッグフードのCMオーディションに落ちたから' },
+    { text: '猫カフェで一番人気の猫、まさかの理由で人気だった。それは？', model: '一切こっちを見ない接客態度' },
+    { text: '水族館のイルカショー、まさかのハプニングが起きた。何が起きた？', model: 'イルカがジャンプの後に一礼した' },
+    { text: 'ペットショップの店員が語る、まさかの裏話とは？', model: 'ハムスターは実は接客業に向いている' },
+    { text: '野生のクマが人里に降りてきた、まさかの理由とは？', model: '山の中のWi-Fiが弱いから' },
+    { text: '動物病院の待合室で起きた、まさかの出来事とは？', model: '犬同士が順番待ちの列を整理し始めた' },
+    { text: 'カラスが人間の生活に馴染みすぎた結果、まさかのことをしていた。それは？', model: 'ゴミ出しカレンダーを覚えていた' },
+    { text: '牧場体験で子どもが叫んだ、まさかの一言とは？', model: '「牛が敬語で鳴いた」' },
+    { text: 'うちの金魚、まさかの行動をするようになった。それは？', model: '水槽のガラス越しにテレビを一緒に見る' },
+    { text: '動物園の飼育員が明かす、まさかのライオンの素顔とは？', model: '実はビビりで雷の日は隠れる' },
+    { text: 'ペットの犬に新しい服を着せたら、まさかの反応をした。何をした？', model: '鏡の前でポーズを決め始めた' },
+    { text: '山でクマ鈴の代わりに使われている、まさかのグッズとは？', model: '懐メロの流れるスピーカー' },
+    { text: '動物と会話ができるとしたら、うちの猫はまさかのことを言いそう。何て言う？', model: '「お前より先に起きてた」' },
+    { text: '競走馬の引退セレモニー、まさかの一幕があった。それは？', model: '観客に向かって一礼した' },
+    { text: 'インコが覚えた、まさかの一言とは？', model: '「それ経費で落ちません」' },
+    { text: '動物園の人気者が変わった理由、まさかのことだった。何があった？', model: '新入りのカピバラが動じなさすぎて話題に' },
+    { text: '田舎のニワトリが時報代わりに鳴く時間、まさかのタイミングだった。いつ？', model: '近所の目覚まし時計と同時' },
+    { text: 'ペットのウサギが飼い主にだけ見せる、まさかの一面とは？', model: '留守中はテレビの音量を勝手に変える' },
+    { text: '迷子の犬が保護された時、首輪に書かれていた、まさかの内容とは？', model: '「拾ってくれた人へ:よろしくお願いします」' },
+
+    // ----- SNS -----
+    { text: 'バズった投稿、実は狙ってなかった。何を投稿した？', model: '弁当の写真、ピント合わせ失敗ver' },
+    { text: 'SNSの誕生日通知、まさかの人から祝われた。誰から？', model: '10年前に喧嘩別れした元同僚' },
+    { text: 'インフルエンサーの「密着24時」、まさかの内容だった。何をしていた？', model: 'ほぼ編集会議' },
+    { text: 'SNSのプロフィール、盛りすぎて起きたこととは？', model: 'オフ会で誰にも気づいてもらえなかった' },
+    { text: 'トレンド入りしたハッシュタグ、まさかの理由だった。それは？', model: '有名人の飼い猫のくしゃみ' },
+    { text: 'インスタのストーリーに間違えて投稿してしまった、まさかの内容とは？', model: '愚痴の下書き全文' },
+    { text: 'SNSの「いいね」の数がまさかの理由で急増した。何があった？', model: '誤字が面白すぎて拡散された' },
+    { text: 'フォロワー数を増やすために試した、まさかの企画とは？', model: '毎日違う言い訳を投稿する' },
+    { text: 'SNSの通知で震え上がった、まさかの内容とは？', model: '3年前の黒歴史投稿にいいねが付いた' },
+    { text: 'リプライ欄が荒れた、まさかの理由とは？', model: '投稿者本人が誤字を必死に否定し続けた' },
+    { text: 'ライブ配信中に映り込んでしまった、まさかのものとは？', model: '見られたくない筋トレグッズ一式' },
+    { text: 'SNSの占いアカウントが出した、まさかの今日の運勢とは？', model: '言い訳の的中率が高まる日' },
+    { text: '友達のSNSを見て絶句した、まさかの投稿内容とは？', model: '昨日の喧嘩を詩的にまとめた長文' },
+    { text: '会社の公式SNSが炎上した、まさかの投稿とは？', model: '担当者の私用アカウントと間違えて投稿' },
+    { text: 'SNSで話題の「あるあるネタ」、まさかの内容で共感を集めた。何？', model: '電車で寝て一駅分の記憶がない' },
+    { text: 'インフルエンサーのおすすめグッズ、まさかの商品だった。何を勧めた？', model: '言い訳ノート(見開き100日分)' },
+    { text: 'SNSのDMで送られてきた、まさかの営業メッセージとは？', model: '「前世からのご縁を感じました」ビジネス' },
+    { text: '誕生日にSNSでもらった、まさかのプレゼント企画とは？', model: 'みんなでその人の黒歴史を掘り起こす' },
+    { text: 'バズるために投稿した動画、まさかの部分だけ切り取られて拡散した。どこ？', model: '準備中に転んだシーン' },
+    { text: 'SNS疲れで始めた「デジタルデトックス」、まさかの結果になった。それは？', model: '3日で友達の近況が全部人づてになった' },
+
+    // ----- YouTube -----
+    { text: '人気YouTuberの企画会議、まさかの内容で盛り上がった。何を話した？', model: 'サムネの顔芸選手権' },
+    { text: '動画のサムネイル、盛りすぎて本編とまさかのギャップがあった。それは？', model: 'タイトルは絶叫、本編は終始無言' },
+    { text: '登録者急増のきっかけ、まさかの理由だった。何があった？', model: '機材トラブルをそのまま配信してしまった' },
+    { text: 'YouTuberが企画で挑戦した、まさかの検証内容とは？', model: '24時間、敬語だけで生活してみた' },
+    { text: '動画のコメント欄で一番伸びた、まさかのコメントとは？', model: '「BGMより編集者の趣味が気になる」' },
+    { text: '企業案件の動画、まさかのNGが出された。何が禁止された？', model: '商品名を面白おかしく言い換えること' },
+    { text: '撮影中に起きた、まさかのハプニングとは？', model: '機材の充電が本番中に切れた' },
+    { text: '人気の「モーニングルーティン」動画、まさかの中身だった。何をしていた？', model: '起きてすぐ台本を確認するだけ' },
+    { text: 'YouTubeライブ中に来た、まさかのスーパーチャットの内容とは？', model: '投げ銭より先に説教が届いた' },
+    { text: '動画のオープニングトーク、毎回まさかの話から始まる。それは？', model: '今日も編集が間に合っていません報告' },
+    { text: 'コラボ動画で起きた、まさかの空気とは？', model: '二人とも台本を読んでいなかった' },
+    { text: '再生数が伸びなかった動画、まさかの理由が判明した。それは？', model: 'サムネの文字が読めないフォントだった' },
+    { text: '視聴者参加型企画、まさかの結果になった。それは？', model: '投票の9割が悪ふざけの選択肢に集中' },
+    { text: '人気YouTuberの「初期の動画」を見返した結果、まさかのことに気づいた。それは？', model: '機材より情熱だけで撮っていた' },
+    { text: '動画編集者が明かす、まさかの苦労とは？', model: '本人が一番笑うところを一番削られる' },
+    { text: '生配信中の放送事故、まさかの内容だった。何が起きた？', model: '台本を映したままカメラを切り替え忘れた' },
+    { text: 'YouTubeのおすすめ欄に、まさかの動画が並んでいた。それは？', model: '自分が10年前に投稿した黒歴史動画' },
+    { text: '有名YouTuberの引退配信、まさかの理由が語られた。それは？', model: 'サムネのポーズのネタが尽きた' },
+    { text: '企画倒れに終わった動画、まさかのタイトルだけが独り歩きした。何？', model: '「絶対成功する」からの大失敗' },
+    { text: 'YouTube活動で一番大変なこと、まさかの答えだった。それは？', model: 'サムネで変な顔を量産すること' },
+
+    // ----- AI -----
+    { text: 'AIアシスタントに恋愛相談をしたら、まさかの返答をされた。何て言われた？', model: '「その質問、私には荷が重いです」' },
+    { text: 'AIが書いた小説、まさかのオチだった。どんなオチ？', model: '主人公が急に現実に目覚める' },
+    { text: 'AIロボットが家事代行中にやらかした、まさかのミスとは？', model: '洗濯物を全部たたみ直して色分けしすぎた' },
+    { text: 'AIチャットボットとの会話がまさかの展開になった。何が起きた？', model: '途中からAIの方が悩み相談してきた' },
+    { text: 'AIに書かせた謝罪文、まさかの内容だった。何が書かれていた？', model: '反省の意を示す絵文字が多すぎる' },
+    { text: '未来のAI搭載家電、まさかの機能がついていた。それは？', model: '冷蔵庫が中身を見て説教してくる' },
+    { text: 'AIに未来予知をさせたら、まさかの予言をされた。何て言われた？', model: '「明日の運勢は「普通」です」' },
+    { text: 'AI面接官が候補者にした、まさかの質問とは？', model: '「あなたにとって私(AI)とは何ですか」' },
+    { text: 'AIで自動生成した絵、まさかの仕上がりだった。どんな絵？', model: '指が7本ある家族写真' },
+    { text: 'AIスピーカーに話しかけたら、まさかの反応をされた。何て返ってきた？', model: '「その話、前にも聞きました(3回目です)」' },
+    { text: 'AIが提案した最適な人生プラン、まさかの内容だった。それは？', model: '「まず一旦寝てください」' },
+    { text: 'AIロボットが接客業に導入された結果、まさかのことが起きた。それは？', model: 'お客さんの愚痴を丁寧に論破し始めた' },
+    { text: 'AIに自分の将来を分析させたら、まさかの結果が出た。それは？', model: 'データが足りず占い師に近い精度です' },
+    { text: 'AIが自動作曲した曲、まさかのタイトルだった。何というタイトル？', model: '「たぶん売れない」' },
+    { text: 'AIとの共同生活で一番困ったこと、まさかの内容だった。それは？', model: '話が長いと途中で要約されてしまう' },
+    { text: 'AIに「人間らしさ」を教え込んだ結果、まさかの行動を覚えた。それは？', model: '締め切り直前に言い訳を生成する' },
+    { text: 'AIが書いたラブレター、まさかの一文が入っていた。それは？', model: '「以上、要件のみで失礼します」' },
+    { text: 'AI審判を導入したスポーツ、まさかの判定基準だった。それは？', model: '頑張った感情ポイントも加点' },
+    { text: 'AIが自動で立てた旅行プラン、まさかの内容だった。それは？', model: '移動時間がすべて瞑想タイムに設定されている' },
+    { text: 'AIロボットに掃除を頼んだら、まさかのものまで整理された。それは？', model: '思い出の品を勝手に「不要」判定した' },
+
+    // ----- ファンタジー -----
+    { text: '魔法学校の新入生歓迎会、まさかの余興が行われた。何をした？', model: '先輩魔法使いの失敗呪文集発表会' },
+    { text: 'ドラゴンが人間に化けて紛れ込んでいた、まさかのバレ方をした。どうバレた？', model: 'くしゃみで小さい火を吹いた' },
+    { text: '勇者パーティーの会議、まさかの議題だった。何を話し合った？', model: '経費精算(魔王討伐旅費)' },
+    { text: '賢者が弟子に伝えた、まさかの奥義とは？', model: '「困ったら寝る」' },
+    { text: '魔法の杖を買いに行ったら、まさかの接客をされた。どんな接客？', model: '杖のサブスクプランを勧められた' },
+    { text: 'エルフの里に伝わる、まさかの伝統行事とは？', model: '森の掃除当番を輪番制で回す' },
+    { text: '冒険者ギルドの掲示板に貼られていた、まさかの依頼とは？', model: '魔王城のポスト投函のみでOK' },
+    { text: '呪われた剣、実はまさかの呪いだった。どんな呪い？', model: '持ち主の口調が急に丁寧になる' },
+    { text: '魔法薬の調合を失敗した結果、まさかのものができた。それは？', model: '異常に美味しいだけの水' },
+    { text: '王様が国民に出した、まさかのおふれとは？', model: '毎週水曜は正直デー' },
+    { text: '妖精が人間にお願いした、まさかのこととは？', model: 'Wi-Fiのパスワードを教えてほしい' },
+    { text: '魔王城の受付、まさかの対応をされた。何をされた？', model: '討伐予約は3ヶ月待ちと言われた' },
+    { text: '伝説の武器を手に入れたら、まさかの説明書が付いてきた。何が書いてあった？', model: '「使用前に正拳突きを一度お試しください」' },
+    { text: '魔法使いの弟子入り試験、まさかの内容だった。何を試された？', model: '杖を忘れずに毎日持ってくる根性' },
+    { text: '竜退治のはずが、まさかの展開になった。何が起きた？', model: '竜の方が先に和解を提案してきた' },
+    { text: '異世界に転生してすぐ、まさかのスキルを授かった。それは？', model: '言い訳を華麗に言い換えるスキル' },
+    { text: '魔法陣を描いたら、まさかのものが召喚された。何が出てきた？', model: '近所の宅配便のお兄さん' },
+    { text: 'ダンジョンの罠、まさかの仕掛けだった。どんな罠？', model: '進むたびに小言を言われる' },
+    { text: '王城の舞踏会で起きた、まさかのハプニングとは？', model: 'シンデレラ役の靴のサイズが合わなすぎた' },
+    { text: '魔法学校の卒業試験、まさかの最終課題だった。それは？', model: '一般人にバレずに一日過ごす' },
+
+    // ----- 魔王 -----
+    { text: '魔王が部下に出した、まさかの指令とは？', model: '今月のノルマは村人を三人笑わせること' },
+    { text: '魔王城の会議室、まさかの張り紙がしてあった。何と書いてあった？', model: '「愚痴タイムは15時からです」' },
+    { text: '魔王が人間界に降臨した理由、まさかのことだった。それは？', model: '限定グッズを買うため' },
+    { text: '魔王の弱点、実はまさかのものだった。それは？', model: '敬語で話しかけられること' },
+    { text: '魔王軍の新人研修、まさかの内容だった。何をした？', model: '威嚇の仕方を先輩に添削してもらう' },
+    { text: '魔王城の食堂メニュー、まさかのラインナップだった。何がある？', model: '日替わり反省ランチ' },
+    { text: '魔王が勇者に送った挑戦状、まさかの文面だった。何と書いてあった？', model: '「都合の良い日程を三つ教えてください」' },
+    { text: '魔王が趣味で始めた、まさかのこととは？', model: '城の家庭菜園' },
+    { text: '魔王軍の作戦会議、まさかの結論に至った。それは？', model: '今回は様子見でいいのでは' },
+    { text: '魔王が実は密かに悩んでいた、まさかのこととは？', model: '部下からの人望のなさ' },
+    { text: '魔王城の入り口に貼られた、まさかの張り紙とは？', model: '「本日、討伐対応はお休みです」' },
+    { text: '魔王が人間界で身分を隠して働いていた、まさかの仕事とは？', model: 'コンビニの深夜バイト' },
+    { text: '魔王の必殺技、実はまさかの理由で使えなくなった。何があった？', model: '腰を痛めた' },
+    { text: '魔王軍の広報担当が発表した、まさかのお知らせとは？', model: '世界征服の予定を延期します' },
+    { text: '魔王が勇者との決戦前に食べた、まさかの食事とは？', model: '験担ぎのカツ丼' },
+    { text: '魔王城の玉座、まさかの理由で新調された。それは？', model: '腰痛対策' },
+    { text: '魔王が最も恐れている、まさかの存在とは？', model: '城の掃除に厳しい執事' },
+    { text: '魔王軍に配られた、まさかの福利厚生とは？', model: '討伐されたら弔慰金あり' },
+    { text: '魔王が人間の勇者に密かに送っていた、まさかのものとは？', model: '差し入れの栄養ドリンク' },
+    { text: '魔王が世界征服より優先した、まさかの用事とは？', model: '城の水道修理の立ち会い' },
+
+    // ----- バイト -----
+    { text: 'バイト初日にまさかのミスをしてしまった。何をした？', model: '制服のタグを付けたまま接客した' },
+    { text: '店長がバイトに求める、まさかのスキルとは？', model: 'クレーム対応より先に世間話力' },
+    { text: 'バイトの面接で聞かれた、まさかの質問とは？', model: '「前世の職業は何でしたか」' },
+    { text: '深夜バイト中に起きた、まさかの出来事とは？', model: 'お客さんに人生相談された' },
+    { text: 'バイト先の裏マニュアルに書かれていた、まさかの内容とは？', model: 'クレームは全力の相槌で受け止める' },
+    { text: 'シフト希望を出したら、まさかの理由で却下された。それは？', model: 'その日は店長の誕生日パーティーだから' },
+    { text: 'バイト仲間との連絡グループ、まさかの名前がついていた。何という名前？', model: '「今日も生きてます会」' },
+    { text: '研修中にまさかのことを教え込まれた。それは？', model: '怒られた時の三段活用の謝り方' },
+    { text: 'バイト先の制服、まさかのデザインだった。どんなデザイン？', model: '胸に店長の似顔絵' },
+    { text: 'お客さんからもらった、まさかのクレームとは？', model: '笑顔が良すぎて逆に怖い' },
+    { text: 'バイトの休憩室に貼られていた、まさかの標語とは？', model: '時給以上の元気を出せ' },
+    { text: '初めての一人勤務、まさかのトラブルが起きた。何があった？', model: 'レジの操作方法を全部忘れた' },
+    { text: 'バイト仲間が実は、まさかの正体だった。それは？', model: '同じ大学の先輩(気づかず1年間タメ口)' },
+    { text: '店長の口癖、まさかの内容だった。何と言う？', model: '「それ、俺に聞く前に自分で決めて」' },
+    { text: 'バイト代の使い道、まさかのことに使っていた。それは？', model: 'バイト先の商品を全部買い戻す' },
+    { text: '面接で「長所は?」と聞かれ、まさかの回答をした。何と答えた？', model: '「遅刻しない自信だけはあります」' },
+    { text: 'バイトのまかない、まさかのメニューだった。何が出た？', model: '売れ残りを全部乗せた謎丼' },
+    { text: '新人指導で先輩が言った、まさかのアドバイスとは？', model: '怒られてる時は違うこと考えてていい' },
+    { text: 'バイト先のシフト表に書かれていた、まさかの注意書きとは？', model: '体調不良より前日の飲みすぎ報告を優先' },
+    { text: '退職の挨拶で店長に言われた、まさかの一言とは？', model: '「次はうちの本社に来ない?」' },
+
+    // ----- コンビニ -----
+    { text: 'コンビニの新商品、まさかのネーミングだった。何という商品？', model: '無理せずダイエットおにぎり(逆効果)' },
+    { text: '深夜のコンビニで店員が対応した、まさかのお客とは？', model: 'レジ横で人生相談を始めた常連客' },
+    { text: 'コンビニの品出し中に見つけた、まさかの商品とは？', model: '賞味期限が来世までの缶詰' },
+    { text: 'コンビニのアプリ限定クーポン、まさかの条件だった。それは？', model: 'レジで店員と挨拶を交わすこと' },
+    { text: 'コンビニ弁当のパッケージに書かれていた、まさかの一言とは？', model: '「頑張った日のあなたへ」' },
+    { text: 'コンビニのイートインコーナーで起きた、まさかの出来事とは？', model: '知らない人と鍋パーティーが始まった' },
+    { text: 'コンビニの店内放送、まさかの内容だった。何を流していた？', model: '今日のおすすめ、店長の気分次第です' },
+    { text: '新人研修でコンビニ店員が最初に教わる、まさかのことは？', model: '揚げ物の油はねへの心の準備' },
+    { text: 'コンビニのレジ横募金箱、まさかの使い道が書かれていた。それは？', model: '店長のコーヒー代' },
+    { text: '24時間営業のコンビニ、まさかの時間帯に混雑する。何時頃？', model: '深夜3時、宿題を忘れた学生ラッシュ' },
+    { text: 'コンビニのおでん、まさかの具材が追加された。それは？', model: '店長の気まぐれ特製団子' },
+    { text: 'コンビニでよく聞く店員のセリフ、まさかの本音バージョンとは？', model: '「温めますか?(本音:早く決めて)」' },
+    { text: 'コンビニのポイントカード、まさかの特典があった。それは？', model: '店長との世間話5分無料' },
+    { text: '深夜バイトの引き継ぎノートに書かれていた、まさかの一文とは？', model: 'お客さんに主人公感のある人が来ます' },
+    { text: 'コンビニの新レジシステム、まさかの機能がついていた。それは？', model: '今日の運勢を占ってくれる' },
+    { text: 'コンビニの前で毎日会う常連さん、まさかの正体だった。それは？', model: '近所の小学校の校長先生' },
+    { text: 'コンビニの廃棄食品、まさかの活用法があった。それは？', model: '店員のまかない即興グルメ大会' },
+    { text: 'コンビニバイトが一番気を使う瞬間、まさかのタイミングだった。それは？', model: '揚げ物を揚げすぎたか聞かれた時' },
+    { text: 'コンビニの店内BGM、まさかの選曲だった。何が流れていた？', model: '店長が若い頃聴いてた懐メロ' },
+    { text: 'コンビニの新サービス、まさかの内容だった。それは？', model: '愚痴を聞くだけのレジ横相談窓口' },
+
+    // ----- 会社 -----
+    { text: '会社の朝礼、まさかの内容だった。何を発表した？', model: '社長の昨日の夢の話' },
+    { text: '新入社員が最初に覚えた、まさかの社内用語とは？', model: '「検討します」の本当の意味' },
+    { text: '会議室の予約表、まさかの理由で埋まっていた。それは？', model: '昼寝スペースとして人気だった' },
+    { text: '上司からのメール、まさかの一文で終わっていた。何と書いてあった？', model: '「以上、よしなに」' },
+    { text: '社内アンケートの結果、まさかの1位だった。何が1位だった？', model: '一番使われている社内ジョーク' },
+    { text: '会社の福利厚生に追加された、まさかの制度とは？', model: '言い訳休暇(年に1日)' },
+    { text: '忘年会の余興、まさかの内容だった。何をした？', model: '上司のモノマネ選手権' },
+    { text: '新人研修で言われた、まさかのビジネスマナーとは？', model: 'ため息は心の中で三回してから出す' },
+    { text: '社長が全社員に配った、まさかのノベルティとは？', model: '社長の座右の銘入りタオル' },
+    { text: '部署異動の辞令、まさかの理由だった。それは？', model: '隣の部署のコピー機と相性が良いから' },
+    { text: '会社の掲示板に貼られていた、まさかのお知らせとは？', model: '「冷蔵庫の中身、記名のないものは没収します」' },
+    { text: '上司の口癖、まさかの内容だった。何と言う？', model: '「俺の若い頃は」から始まる話が長い' },
+    { text: '社内チャットで誤爆した、まさかのメッセージとは？', model: '「今日のランチ、上司の奢りだといいな」' },
+    { text: '退職の挨拶メール、まさかの一文が入っていた。それは？', model: 'コピー機の癖、後任によろしく' },
+    { text: '会社の飲み会で恒例になっている、まさかの余興とは？', model: '一発芸の代わりに業務報告' },
+    { text: '新しく導入されたオフィスのルール、まさかの内容だった。それは？', model: '愚痴は必ずメモに残す' },
+    { text: '社員食堂の人気メニュー、まさかの理由で人気だった。それは？', model: '量が多いと店長が上機嫌になれる' },
+    { text: '会議で誰も発言しない空気の理由、まさかのことだった。それは？', model: '全員、内職でスマホゲームをしていた' },
+    { text: '出張報告書に書かれていた、まさかの一文とは？', model: '移動時間の方が仕事より長かったです' },
+    { text: '人事評価シートの自己評価欄に、まさかのことを書いた。何を書いた？', model: '今年も生き延びました' },
+
+    // ----- 田舎 -----
+    { text: '田舎のおばあちゃんが教えてくれた、まさかの知恵とは？', model: 'Wi-Fiは縁側の方が繋がりやすい' },
+    { text: '田舎の駅前で唯一賑わう、まさかのスポットとは？', model: '自動販売機の前(地域の集会所化)' },
+    { text: '田舎の回覧板に書かれていた、まさかの内容とは？', model: '隣のタヌキが最近人懐っこい' },
+    { text: '田舎の運動会、まさかの種目が名物になっていた。それは？', model: '町内会長のパン食い競争' },
+    { text: '田舎のバス、まさかの運行ルールがあった。それは？', model: '運転手が知り合いだと少し待ってくれる' },
+    { text: '田舎の夜、まさかの理由で真っ暗になる。それは？', model: '街灯より星の方が目立つように調整されている' },
+    { text: '田舎の商店街、まさかの理由でシャッターが閉まっていた。それは？', model: '店主が畑仕事に出ている' },
+    { text: '田舎の祭りの出し物、まさかの内容だった。それは？', model: '豊作を願う住民全員でのラジオ体操' },
+    { text: '田舎への移住者が驚いた、まさかのローカルルールとは？', model: '野菜のおすそ分けの返礼マナー' },
+    { text: '田舎のコンビニ、まさかの品揃えだった。何が売っていた？', model: '農具コーナー' },
+    { text: '田舎の学校、まさかの理由で全校生徒が10人だった。それは？', model: '少子化より野生動物への配慮で分校化' },
+    { text: '田舎の温泉旅館、まさかのサービスがあった。それは？', model: '宿泊客の畑仕事を手伝ってくれる' },
+    { text: '田舎の消防団、まさかの活動をしていた。それは？', model: '火事より鳥獣被害の見回りがメイン' },
+    { text: '田舎のタクシー、まさかの特徴があった。それは？', model: '運転手が乗客の親戚である確率が高い' },
+    { text: '田舎の神社の祭神、まさかのご利益で有名だった。それは？', model: '野菜の豊作より縁談成就' },
+    { text: '田舎の道の駅、まさかの人気商品があった。それは？', model: '店主の手書きポップの方が話題' },
+    { text: '田舎の空き家、まさかの使われ方をしていた。それは？', model: '町内会の隠れ集会所' },
+    { text: '田舎で噂の妖怪、実はまさかの正体だった。それは？', model: '近所のおじいちゃんの夜の散歩' },
+    { text: '田舎に伝わる占い、まさかの的中率だった。それは？', model: '天気より人間関係の方がよく当たる' },
+    { text: '田舎で唯一の娯楽、まさかのものだった。それは？', model: '隣町の噂話の回覧' },
+
+    // ----- 都会 -----
+    { text: '都会の満員電車で見た、まさかの光景とは？', model: '全員が同じタイミングでため息をついた' },
+    { text: '都会のカフェで隣の人がしていた、まさかの会話とは？', model: 'オンライン会議で相槌だけの参加' },
+    { text: '都会のタワーマンション、まさかのルールがあった。それは？', model: 'エレベーターでの世間話は禁止' },
+    { text: '都会の駅で見かけた、まさかの案内板とは？', model: '出口多すぎ注意' },
+    { text: '都会の一人暮らし、まさかの理由で寂しさを感じた。それは？', model: '宅配便の受け取りサインだけが人との接点' },
+    { text: '都会のオフィス街、まさかの理由でランチ難民が発生した。それは？', model: '人気店の行列がビル一周分' },
+    { text: '都会の夜景スポット、まさかの理由で人気だった。それは？', model: 'Wi-Fiが異常に強い' },
+    { text: '都会の高級レストラン、まさかのシステムだった。それは？', model: 'メニューに値段が一切書いていない' },
+    { text: '都会での飲み会、まさかの理由で解散が早かった。それは？', model: '全員が始発を気にしていた' },
+    { text: '都会のジム、まさかの人気サービスがあった。それは？', model: 'マシンの順番待ちで自然発生する交流会' },
+    { text: '都会の街角で配られていた、まさかのティッシュの中身とは？', model: '占いの結果(悪い方だけ)' },
+    { text: '都会の高層ビル、まさかの理由でエレベーターが混む。それは？', model: '昼休みの喫煙所渋滞' },
+    { text: '都会の一等地の駐車場、まさかの利用のされ方だった。それは？', model: '昼寝スポット化' },
+    { text: '都会の生活で一番驚いた、まさかの物価とは？', model: '駐輪場が家賃より高い' },
+    { text: '都会のシェアハウス、まさかのルールがあった。それは？', model: '冷蔵庫内は写真で在庫管理' },
+    { text: '都会の街コン、まさかの内容だった。それは？', model: '名刺交換がメインでほぼ営業' },
+    { text: '都会の終電、まさかの光景が見られる。それは？', model: '全員がスマホの充電を気にしている' },
+    { text: '都会のコインランドリー、まさかの利用者層だった。それは？', model: '一人暮らしの社長が紛れ込んでいる' },
+    { text: '都会のマンションの管理人、まさかの特技を持っていた。それは？', model: '住民の生活音だけで在宅を判断できる' },
+    { text: '都会の路上ライブ、まさかの理由で人だかりができた。それは？', model: '歌より合いの手のおじさんが上手すぎた' },
+
+    // ----- スポーツ -----
+    { text: 'サッカーの試合中、まさかの理由で審判が笛を吹いた。それは？', model: '選手の靴紐が芸術的に解けていたから' },
+    { text: '野球の監督が采配で見せた、まさかの作戦とは？', model: 'じゃんけんで打順を決める' },
+    { text: 'マラソン大会の給水所、まさかのものが置いてあった。それは？', model: '完走後の言い訳シート' },
+    { text: '高校球児のインタビュー、まさかの回答をした。何と答えた？', model: '「一番の思い出は移動中のバスです」' },
+    { text: 'バスケの試合、まさかの理由でタイムアウトが取られた。それは？', model: '監督の靴が脱げたから' },
+    { text: '卓球の試合前、選手がまさかのルーティンをしていた。それは？', model: 'ラケットに毎回話しかける' },
+    { text: '運動会の借り物競走、まさかのお題が出た。それは？', model: '今一番会いたくない人' },
+    { text: 'ボクシングの試合前会見、まさかの発言をした。何と言った？', model: '「実は今日、誕生日です」' },
+    { text: '水泳選手が明かした、まさかのメンタル調整法とは？', model: '入水前に必ず伸びをする(3回)' },
+    { text: 'ゴルフのプロが試合中に見せた、まさかの行動とは？', model: '観客に「今のナイスショットどうでした?」と聞いた' },
+    { text: '体操の採点競技、まさかの減点理由があった。それは？', model: '着地の後のドヤ顔が大きすぎる' },
+    { text: '部活の朝練、まさかの理由で中止になった。それは？', model: '顧問が寝坊した' },
+    { text: 'eスポーツの大会会場、まさかのものが用意されていた。それは？', model: '選手専用の肩たたきコーナー' },
+    { text: '相撲部屋の朝の稽古、まさかのルールがあった。それは？', model: '負けたら台所当番' },
+    { text: '陸上競技のスタート、まさかの理由でやり直しになった。それは？', model: '選手の掛け声が大きすぎた' },
+    { text: '少年野球のミーティング、まさかの内容だった。それは？', model: '監督の説教より作戦が短かった' },
+    { text: 'テニスの試合中、まさかの理由で観客がざわついた。それは？', model: 'ボールボーイの動きがプロ並みだった' },
+    { text: 'スキー場のリフト、まさかの会話が飛び交っていた。それは？', model: '初心者同士の励まし合い' },
+    { text: 'フィギュアスケートの演技後、まさかのコメントを残した。何と言った？', model: '「一番緊張したのは衣装の着替えです」' },
+    { text: '草野球の試合、まさかの理由で延長になった。それは？', model: '全員が終電を気にしつつも本気を出した' }
   ];
 
   // ----- ランク別の設定(ダメージ量・AI不使用時のフォールバック用コメント/セリフ、関西弁) -----
@@ -1773,6 +2175,9 @@ html, body {
   var answerInput = document.getElementById('answerInput');
   var charCount = document.getElementById('charCount');
   var micBtn = document.getElementById('micBtn');
+  var micFirstTip = document.getElementById('micFirstTip');
+  var voiceHint = document.getElementById('voiceHint');
+  var voiceStatus = document.getElementById('voiceStatus');
   var submitBtn = document.getElementById('submitBtn');
   var resultArea = document.getElementById('resultArea');
   var playerHpRow = document.getElementById('playerHpRow');
@@ -1784,7 +2189,6 @@ html, body {
   var impactBurst = document.getElementById('impactBurst');
   var impactText = document.getElementById('impactText');
   var screamText = document.getElementById('screamText');
-  var moodBadge = document.getElementById('moodBadge');
   var darkBeam = document.getElementById('darkBeam');
   var playerDamagePopup = document.getElementById('playerDamagePopup');
   var attackLetter = document.getElementById('attackLetter');
@@ -2015,41 +2419,27 @@ html, body {
   }
 
   // 魔神の表情差分画像(通常/ニヤリ/怒り/焦り/絶望)を、状況に応じて実際に切り替える。
-  // 絵文字バッジも併用し、切り替わったことをより確実に伝える。
-  var MOOD_EMOJI = {
-    smirk: '😏',
-    anger: '😠',
-    worry: '😰',
-    despair: '💀'
-  };
-
+  // 表情は画像のみで表現する(絵文字は世界観を壊すため使わない)。
   var currentMood = 'normal';
 
-  function setHeroMood(mood, persist) {
+  function setHeroMood(mood) {
     var key = mood || 'normal';
     heroEl.classList.remove('mood-anger', 'mood-worry', 'mood-despair', 'mood-smirk');
-    moodBadge.classList.remove('show', 'persist');
 
     if (key !== currentMood && HERO_IMAGES[key]) {
       heroEl.style.backgroundImage = 'url("' + HERO_IMAGES[key] + '")';
       currentMood = key;
     }
 
-    if (!mood || mood === 'normal') {
-      moodBadge.textContent = '';
-      return;
+    if (mood && mood !== 'normal') {
+      heroEl.classList.add('mood-' + mood);
     }
-
-    heroEl.classList.add('mood-' + mood);
-    moodBadge.textContent = MOOD_EMOJI[mood] || '';
-    void moodBadge.offsetWidth;
-    moodBadge.classList.add(persist ? 'persist' : 'show');
   }
 
   // 一時的な感情演出が終わった後、HP状態に応じたベースの表情に戻す
   function refreshPersistentMood() {
     if (currentHp > 0 && currentHp <= MAX_HP * 0.25) {
-      setHeroMood('worry', true);
+      setHeroMood('worry');
     } else {
       setHeroMood(null);
     }
@@ -2184,50 +2574,76 @@ html, body {
   // 送信前に自由に編集できる(自動送信はしない)。
   (function setupVoiceInput() {
     var SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognitionImpl) return; // 未対応ブラウザではボタンを出さない
+    if (!SpeechRecognitionImpl) return; // 未対応ブラウザではボタンを出さない(テキスト入力のみになる)
 
     var recognition = new SpeechRecognitionImpl();
     recognition.lang = 'ja-JP';
-    recognition.interimResults = false;
+    recognition.interimResults = true; // 話しながらリアルタイムで文字を増やす
     recognition.maxAlternatives = 1;
 
     var listening = false;
+    var baseText = ''; // 認識開始時点で欄に入っていた文字(その後ろに続けて反映する)
 
     micBtn.hidden = false;
+    voiceHint.hidden = false;
+
+    // 初めて訪れた人にだけ、マイクボタンの使い方を一度だけ吹き出しで案内する
+    try {
+      if (!localStorage.getItem('maijinVoiceTipShown')) {
+        setTimeout(function () {
+          micFirstTip.classList.add('show');
+        }, 900);
+        localStorage.setItem('maijinVoiceTipShown', '1');
+      }
+    } catch (e) { /* localStorage不可の環境では案内をスキップ */ }
 
     function stopListening() {
       listening = false;
       micBtn.classList.remove('listening');
+      voiceStatus.hidden = true;
       try { recognition.stop(); } catch (e) {}
     }
 
     micBtn.addEventListener('click', function () {
       SFX.click();
+      micFirstTip.classList.remove('show');
       if (listening) {
         stopListening();
         return;
       }
       if (answerInput.disabled) return;
 
+      baseText = answerInput.value || '';
+
       try {
         recognition.start();
         listening = true;
         micBtn.classList.add('listening');
+        voiceStatus.hidden = false;
+        answerInput.focus();
       } catch (e) {
         // すでに開始中などのエラーは無視
       }
     });
 
+    // 確定した(isFinal)部分はbaseTextに積み上げ、未確定(認識中)の部分は
+    // 毎回上書き表示することで「話しながら文字が増えていく」挙動にする
     recognition.addEventListener('result', function (e) {
-      var transcript = '';
-      for (var i = 0; i < e.results.length; i++) {
-        transcript += e.results[i][0].transcript;
+      var finalChunk = '';
+      var interimChunk = '';
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        var chunk = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          finalChunk += chunk;
+        } else {
+          interimChunk += chunk;
+        }
       }
-      // 既存の入力に音声認識結果をつなげ、送信前に編集できるようにする
-      var base = answerInput.value ? (answerInput.value + '') : '';
-      answerInput.value = (base + transcript).slice(0, 50);
+      if (finalChunk) {
+        baseText = (baseText + finalChunk);
+      }
+      answerInput.value = (baseText + interimChunk).slice(0, 50);
       charCount.textContent = answerInput.value.length;
-      answerInput.focus();
     });
 
     recognition.addEventListener('end', stopListening);
@@ -2653,8 +3069,8 @@ html, body {
     heroEl.classList.remove('hit', 'counter-attacking', 'defeated');
     setHeroMood(null);
 
-    lastOdai = null;
-    odaiQueue = [];
+    // お題の出題キューはリセットしない(何度リトライしても、320問を
+    // 一通り出し切るまでは同じ問題が出にくいようにするため)
     setOdai(nextOdai());
     startTimer();
   }
