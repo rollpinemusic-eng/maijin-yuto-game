@@ -2312,28 +2312,14 @@ html, body {
   }
 
   function judgeWithAI(odai, answer) {
-    var userPrompt =
-      '次の大喜利のお題とプレイヤーの回答を読み、大喜利として本当に面白いかどうかを辛口に採点して。\n' +
-      '甘い採点はせず、平凡な回答・お題からズレた回答・意味不明な回答はしっかり低く評価すること。\n' +
-      '本当に発想が秀逸で笑える回答だけを高く評価すること。\n\n' +
-      'お題:「' + odai.text + '」\n' +
-      'プレイヤーの回答:「' + answer + '」\n\n' +
-      '次のJSON形式のみで出力して(説明文やコードブロックは付けない):\n' +
-      '{"rank":"A","comment":"魔神ゆうとが関西弁でこの回答にツッコむ短いセリフ(20〜40文字程度)"}\n' +
-      'rankは A(非常に面白い・独創的) / B(面白い) / C(普通) / D(面白くない・成立していない) のいずれか一文字。';
-
     var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
 
-    var fetchP = fetch('https://text.pollinations.ai/openai', {
+    // AI判定はCloudflare Worker経由でCloudflare Workers AI(Llama 3.2 3B)を呼ぶ。
+    // APIキーはWorker側の env.AI バインディングが持つため、ここには一切登場しない。
+    var fetchP = fetch('https://maijin-yuto-judge.rollpinemusic-173.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [
-          { role: 'system', content: 'あなたは大喜利ゲームに登場する魔神「ゆうと」。関西弁で話す、尊大で挑発的なキャラクター。指示されたJSON形式のみで回答すること。' },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.8
-      }),
+      body: JSON.stringify({ odai: odai.text, answer: answer }),
       signal: controller ? controller.signal : undefined
     })
       .then(function (res) {
@@ -2341,13 +2327,13 @@ html, body {
         return res.json();
       })
       .then(function (data) {
-        var content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-        var parsed = content ? extractJsonObject(content) : null;
-        if (!parsed) throw new Error('no json in response');
-        var rank = String(parsed.rank || '').trim().toUpperCase();
+        var rank = String(data && data.rank || '').trim().toUpperCase();
         if (['A', 'B', 'C', 'D'].indexOf(rank) === -1) throw new Error('bad rank');
-        var comment = typeof parsed.comment === 'string' ? parsed.comment.trim() : '';
-        return { rank: rank, comment: comment || null };
+        var majinComment = data && typeof data.majinComment === 'string' ? data.majinComment.trim() : '';
+        var comment = data && typeof data.comment === 'string' ? data.comment.trim() : '';
+        // 魔神ゆうとのツッコミ(majinComment)を優先し、無ければ採点理由(comment)を使う。
+        // どちらも無ければnullとし、呼び出し側の既存フォールバック(buildFallbackComment)に任せる。
+        return { rank: rank, comment: majinComment || comment || null };
       });
 
     var timeoutP = new Promise(function (resolve) {

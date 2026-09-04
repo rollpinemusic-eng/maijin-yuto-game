@@ -1,0 +1,7 @@
+name = "maijin-yuto-judge"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Workers AIのバインディング。APIキー不要で env.AI として使える。
+[ai]
+binding = "AI"
