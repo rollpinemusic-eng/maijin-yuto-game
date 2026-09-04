@@ -400,6 +400,15 @@ html, body {
   text-shadow: 0 0 6px rgba(180, 100, 255, 0.6);
 }
 
+/* 敵キャラの強さレベル表示(新規追加要素。既存のtitle-eyebrow等は無変更) */
+.title-strength {
+  margin: 0 0 4px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #ffd700;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+}
+
 .title-main {
   margin: 2px 0 6px;
   font-size: 46px;
@@ -1333,6 +1342,7 @@ html, body {
   <!-- ヒーロー:ボス演出エリア(生成イラスト使用) -->
   <section class="hero" id="heroEl">
     <div class="title-block">
+      <p class="title-strength">強さ　☆☆☆☆☆☆☆☆☆☆☆</p>
       <p class="title-eyebrow">魔神</p>
       <h1 class="title-main brush">ゆうと</h1>
       <p class="title-desc">大喜利界を支配する<br>最恐の魔神。笑いで打ち負かせ。</p>
@@ -1597,6 +1607,13 @@ html, body {
     gameOver: function () {
       [400, 350, 300, 220].forEach(function (f, i) {
         setTimeout(function () { sfxTone(f, 0.4, { type: 'sawtooth', gain: 0.18 }); }, i * 170);
+      });
+    },
+
+    // 新しいお題が表示される瞬間の短いお題発表音(IPPONグランプリ風、テンポを邪魔しない短さ)
+    newOdai: function () {
+      [880, 1175, 1568].forEach(function (f, i) {
+        setTimeout(function () { sfxTone(f, 0.14, { type: 'triangle', gain: 0.14 }); }, i * 55);
       });
     }
   };
@@ -2293,6 +2310,7 @@ html, body {
     setTimeout(function () {
       odaiText.textContent = odai.text;
       odaiText.classList.remove('odai-hidden');
+      SFX.newOdai();
     }, 200);
   }
 
