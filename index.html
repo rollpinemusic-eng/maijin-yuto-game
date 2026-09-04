@@ -351,6 +351,72 @@ html, body {
   opacity: 0;
 }
 
+/* プレイヤーの攻撃(判定文字が発光しながら魔神へ飛んでいく) */
+.attack-letter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  font-family: "Yuji Syuku", serif;
+  font-size: 64px;
+  line-height: 1;
+  z-index: 44;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.attack-letter.rank-A { color: #ffe066; text-shadow: 0 0 16px #ffd700, 0 0 34px #ff9f1c, 0 0 60px #ff9f1c; }
+.attack-letter.rank-B { color: #7dd3fc; text-shadow: 0 0 14px #38bdf8, 0 0 30px #0ea5e9; }
+.attack-letter.rank-C { color: #ffb199; text-shadow: 0 0 12px #f87171, 0 0 24px #ef4444; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .attack-letter.flying {
+    animation: attackLetterSpin 0.4s linear;
+  }
+}
+
+@keyframes attackLetterSpin {
+  from { filter: brightness(1.3); }
+  to   { filter: brightness(1.8); }
+}
+
+/* 魔神側のダメージ数値ポップアップ(命中の瞬間だけ表示) */
+.boss-damage-popup {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  margin: 0;
+  font-family: "Yuji Syuku", serif;
+  font-size: 30px;
+  color: #fff;
+  text-shadow: 2px 2px 0 #000, 0 0 14px currentColor;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+}
+
+.boss-damage-popup.rank-A { color: #ffd700; font-size: 38px; }
+.boss-damage-popup.rank-B { color: #7dd3fc; }
+.boss-damage-popup.rank-C { color: #ffb199; font-size: 24px; }
+
+.boss-damage-popup.play {
+  animation: bossDamagePlay 0.9s cubic-bezier(.2,1.4,.35,1) forwards;
+}
+
+@keyframes bossDamagePlay {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  20%  { opacity: 1; transform: translate(-50%, -55%) scale(1.3); }
+  40%  { transform: translate(-50%, -60%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -90%) scale(0.9); }
+}
+
+/* ヒットストップ:命中の瞬間、一拍だけ画面の動きを止めて「間」を作る */
+.app.hit-stop * {
+  animation-play-state: paused !important;
+}
+
 .title-block {
   position: absolute;
   top: 14px;
@@ -386,23 +452,27 @@ html, body {
   text-shadow: 0 1px 3px #000;
 }
 
+/* 吹き出しは顔にかからないよう、ヒーロー下端の帯として配置する
+   (顔・表情は常に見える状態を保つ) */
 .speech-bubble {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 2;
-  max-width: 40%;
-  background: rgba(15, 8, 26, 0.82);
-  border: 1px solid rgba(196, 160, 255, 0.35);
-  border-radius: 4px 16px 16px 16px;
-  padding: 10px 12px;
+  left: 10px;
+  right: 10px;
+  bottom: 8px;
+  z-index: 5;
+  max-width: none;
+  background: rgba(10, 5, 18, 0.88);
+  border: 1px solid rgba(196, 160, 255, 0.4);
+  border-radius: 14px;
+  padding: 8px 14px;
   backdrop-filter: blur(2px);
+  text-align: center;
 }
 
 .speech-bubble p {
   margin: 0;
-  font-size: 11.5px;
-  line-height: 1.65;
+  font-size: 12px;
+  line-height: 1.5;
   color: #efe6ff;
 }
 
@@ -692,6 +762,10 @@ html, body {
   color: #cdbdea;
 }
 
+.answer-input-wrap {
+  position: relative;
+}
+
 .answer-input {
   width: 100%;
   min-height: 48px;
@@ -700,7 +774,7 @@ html, body {
   background: #0d0616;
   color: #fff;
   font-size: 15px;
-  padding: 8px 12px;
+  padding: 8px 40px 8px 12px;
   resize: none;
   font-family: inherit;
   transition: border-color 0.15s ease;
@@ -713,6 +787,46 @@ html, body {
 
 .answer-input:disabled {
   opacity: 0.6;
+}
+
+.mic-btn {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #4a2f7a;
+  background: #1c1030;
+  color: #d9c6ff;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mic-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mic-btn.listening {
+  background: #ff2d6a;
+  border-color: #ff8fb3;
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mic-btn.listening {
+    animation: micPulse 0.8s ease-in-out infinite;
+  }
+}
+
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 45, 106, 0.6); }
+  50%      { box-shadow: 0 0 0 8px rgba(255, 45, 106, 0); }
 }
 
 .answer-input.empty-warning {
@@ -1171,6 +1285,10 @@ html, body {
   <!-- 魔神の攻撃(闇の魔力弾) -->
   <div class="dark-beam" id="darkBeam"></div>
 
+  <!-- プレイヤーの攻撃(判定文字が魔神へ飛んでいく) -->
+  <p class="attack-letter" id="attackLetter">A</p>
+  <p class="boss-damage-popup" id="bossDamagePopup">-400</p>
+
   <!-- 魔神HP -->
   <div class="hp-row">
     <span class="hp-tag boss-tag">魔神</span>
@@ -1213,7 +1331,10 @@ html, body {
     </div>
 
     <p class="answer-label">あなたの回答</p>
-    <textarea id="answerInput" class="answer-input" rows="3" maxlength="50" placeholder="ここに回答を入力…"></textarea>
+    <div class="answer-input-wrap">
+      <textarea id="answerInput" class="answer-input" rows="3" maxlength="50" placeholder="ここに回答を入力…"></textarea>
+      <button id="micBtn" class="mic-btn" type="button" title="音声入力" hidden>🎤</button>
+    </div>
     <div class="char-count"><span id="charCount">0</span>/50</div>
 
     <button id="submitBtn" class="submit-btn" type="button">回答する</button>
@@ -1411,7 +1532,8 @@ html, body {
   var PLAYER_MAX_HP = 100;    // プレイヤーHP
   var COUNTER_DAMAGE = 35;    // 魔神の反撃1回あたりのダメージ(3回で沈む想定)
   var ANSWER_TIME = 50;       // 1問あたりの制限時間(秒)
-  var RESULT_DISPLAY_MS = 1500;  // 通常の結果表示〜次の問題までの間隔(判定を読める長さは確保しつつテンポ優先)
+  var RESULT_DISPLAY_MS = 1300;  // 命中後の結果表示〜次の問題までの間隔(判定を読める長さは確保しつつテンポ優先)
+  var RANK_READ_MS = 450;        // 判定文字を見せてから、攻撃(発射)を始めるまでの間
   var COUNTER_DISPLAY_MS = 1600; // 着弾後、次の問題に進むまでの間(数値を読めればよいので短め)
   var DEFEAT_SEQUENCE_MS = 3400; // 魔神撃破演出の再生時間(大爆発〜吹き飛び〜消滅)
   var MAX_D_COUNT = 2;        // D判定が累計何回で魔神が反撃してくるか
@@ -1650,6 +1772,7 @@ html, body {
   var odaiText = document.getElementById('odaiText');
   var answerInput = document.getElementById('answerInput');
   var charCount = document.getElementById('charCount');
+  var micBtn = document.getElementById('micBtn');
   var submitBtn = document.getElementById('submitBtn');
   var resultArea = document.getElementById('resultArea');
   var playerHpRow = document.getElementById('playerHpRow');
@@ -1664,6 +1787,8 @@ html, body {
   var moodBadge = document.getElementById('moodBadge');
   var darkBeam = document.getElementById('darkBeam');
   var playerDamagePopup = document.getElementById('playerDamagePopup');
+  var attackLetter = document.getElementById('attackLetter');
+  var bossDamagePopup = document.getElementById('bossDamagePopup');
   var clearOverlay = document.getElementById('clearOverlay');
   var retryBtn = document.getElementById('retryBtn');
   var gameOverOverlay = document.getElementById('gameOverOverlay');
@@ -1930,6 +2055,52 @@ html, body {
     }
   }
 
+  // ----- 演出:ヒットストップ(命中の瞬間、一拍だけ動きを止めて「重み」を出す) -----
+  function triggerHitStop(ms) {
+    appEl.classList.add('hit-stop');
+    setTimeout(function () {
+      appEl.classList.remove('hit-stop');
+    }, ms || 90);
+  }
+
+  // ----- 演出:プレイヤーの攻撃(判定文字が発光しながら魔神へ飛んでいく) -----
+  // カード内のランク文字の位置から、魔神(hero中央)へ向けて飛ばし、命中でコールバックを呼ぶ
+  function launchAttackLetter(rank, onImpact) {
+    var appRect = appEl.getBoundingClientRect();
+    var badgeRect = rankBadge.getBoundingClientRect();
+    var heroRect = heroEl.getBoundingClientRect();
+
+    var startX = badgeRect.left - appRect.left + badgeRect.width / 2;
+    var startY = badgeRect.top - appRect.top + badgeRect.height / 2;
+    var endX = heroRect.left - appRect.left + heroRect.width / 2;
+    var endY = heroRect.top - appRect.top + heroRect.height * 0.5;
+
+    attackLetter.textContent = rank;
+    attackLetter.className = 'attack-letter rank-' + rank;
+    attackLetter.style.transition = 'none';
+    attackLetter.style.left = startX + 'px';
+    attackLetter.style.top = startY + 'px';
+    attackLetter.style.transform = 'translate(-50%, -50%) scale(1) rotate(0deg)';
+    attackLetter.style.opacity = '1';
+    void attackLetter.offsetWidth;
+
+    requestAnimationFrame(function () {
+      attackLetter.classList.add('flying');
+      attackLetter.style.transition = 'left 0.38s cubic-bezier(.4,0,.7,1), top 0.38s cubic-bezier(.4,0,.7,1), transform 0.38s cubic-bezier(.4,0,.7,1)';
+      attackLetter.style.left = endX + 'px';
+      attackLetter.style.top = endY + 'px';
+      attackLetter.style.transform = 'translate(-50%, -50%) scale(0.35) rotate(320deg)';
+    });
+
+    setTimeout(function () {
+      attackLetter.style.opacity = '0';
+      attackLetter.classList.remove('flying');
+      // 着弾の瞬間、一拍止めてから爆発演出につなげる
+      triggerHitStop(90);
+      setTimeout(onImpact, 90);
+    }, 380);
+  }
+
   // ----- 演出:魔神が放つ巨大な闇のビーム(反撃演出の核) -----
   // 魔神の胸元でエネルギーが凝縮(charge)→プレイヤーHPバーへ向けて撃ち下ろす(fire)→着弾でコールバック
   function launchDarkBeam(onImpact) {
@@ -2008,6 +2179,61 @@ html, body {
     charCount.textContent = answerInput.value.length;
   });
 
+  // ----- 音声入力(対応ブラウザのみマイクボタンを表示) -----
+  // テキスト入力・音声入力どちらも可能。認識結果は回答欄に反映されるだけで、
+  // 送信前に自由に編集できる(自動送信はしない)。
+  (function setupVoiceInput() {
+    var SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionImpl) return; // 未対応ブラウザではボタンを出さない
+
+    var recognition = new SpeechRecognitionImpl();
+    recognition.lang = 'ja-JP';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    var listening = false;
+
+    micBtn.hidden = false;
+
+    function stopListening() {
+      listening = false;
+      micBtn.classList.remove('listening');
+      try { recognition.stop(); } catch (e) {}
+    }
+
+    micBtn.addEventListener('click', function () {
+      SFX.click();
+      if (listening) {
+        stopListening();
+        return;
+      }
+      if (answerInput.disabled) return;
+
+      try {
+        recognition.start();
+        listening = true;
+        micBtn.classList.add('listening');
+      } catch (e) {
+        // すでに開始中などのエラーは無視
+      }
+    });
+
+    recognition.addEventListener('result', function (e) {
+      var transcript = '';
+      for (var i = 0; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      // 既存の入力に音声認識結果をつなげ、送信前に編集できるようにする
+      var base = answerInput.value ? (answerInput.value + '') : '';
+      answerInput.value = (base + transcript).slice(0, 50);
+      charCount.textContent = answerInput.value.length;
+      answerInput.focus();
+    });
+
+    recognition.addEventListener('end', stopListening);
+    recognition.addEventListener('error', stopListening);
+  })();
+
   // ----- 時間切れ処理 -----
   // 3回連続の不発(タイムアップ or スベり)になった瞬間だけ、魔神の本格的な反撃
   // イベント(模範回答の発表→攻撃演出→プレイヤーHP減少)を発生させる。
@@ -2085,6 +2311,9 @@ html, body {
   // ----- 判定結果をゲームに反映 -----
   // カードは「ランク・ラベル・ダメージ数値」だけのビジュアル表示にする。
   // セリフ(AIの感想・煽り文句)は魔神の吹き出し(bossLine)だけに出し、二重表示しない。
+  // 判定→攻撃発射→命中→被弾→表情変化、の流れがひと目で分かるようにする。
+  // HPの増減・魔神の被弾表情・効果音はすべて「命中の瞬間」に合わせて発生させる
+  // (判定表示の直後に表情だけ先に変わってしまわないように)。
   function applyJudgeResult(rank, aiComment, answer) {
     var info = RANK_TABLE[rank];
     var comment = aiComment || buildFallbackComment(rank, answer);
@@ -2097,7 +2326,7 @@ html, body {
     void rankBadge.offsetWidth;
     rankBadge.classList.add('reveal-pop');
 
-    damageText.textContent = info.damage > 0 ? ('-' + info.damage + ' DAMAGE') : 'NO DAMAGE';
+    damageText.textContent = info.damage > 0 ? '' : 'NO DAMAGE';
     bossLine.textContent = '「' + comment + '」';
 
     if (rank === 'A') SFX.rankA();
@@ -2106,78 +2335,91 @@ html, body {
     else SFX.rankD();
 
     if (info.damage > 0) {
-      // ----- 攻撃成功:魔神にダメージ。ランクごとに演出の派手さを変える -----
-      currentHp = Math.max(currentHp - info.damage, 0);
-      updateHpDisplay();
+      // ----- 攻撃成功:判定文字を少し見せてから魔神へ撃ち込む -----
+      setTimeout(function () {
+        resultArea.hidden = true;
+        launchAttackLetter(rank, function () {
+          // ----- 命中:ここで初めてダメージ反映・被弾表情・効果音を発生させる -----
+          currentHp = Math.max(currentHp - info.damage, 0);
+          updateHpDisplay();
 
-      heroEl.classList.remove('hit');
-      void heroEl.offsetWidth;
-      heroEl.classList.add('hit');
-      playImpact(rank);
+          heroEl.classList.remove('hit');
+          void heroEl.offsetWidth;
+          heroEl.classList.add('hit');
+          playImpact(rank);
 
-      if (rank === 'A') {
-        // 会心の一撃:ニヤリ+画面全体を揺らし、金色フラッシュ・稲妻・衝撃波・パーティクル大量発生
-        SFX.critical();
-        setHeroMood('smirk');
-        triggerScreenShake(true);
-        triggerLightning();
-        triggerShockwave('#ffd700');
-        flashOverlay.classList.remove('flash-active', 'flash-gold');
-        void flashOverlay.offsetWidth;
-        flashOverlay.classList.add('flash-active', 'flash-gold');
-        spawnParticles(22, ['#ffd700', '#ffb703', '#fff3b0', '#ff9f1c']);
-      } else if (rank === 'B') {
-        SFX.playerAttack();
-        setTimeout(function () { SFX.bossHit(); }, 90);
-        setHeroMood('smirk');
-        triggerScreenShake(false);
-        triggerShockwave('#38bdf8');
-        spawnParticles(10, ['#38bdf8', '#7dd3fc', '#bae6fd']);
-      } else {
-        // C:手応えは薄いので衝撃波のみ。ニヤリ程度の余裕
-        SFX.playerAttack();
-        setHeroMood('smirk');
-        triggerShockwave('#f87171');
-        cMehCount++;
-        updateStrikeDisplay();
-      }
-      setTimeout(function () { SFX.hpTick(); }, 120);
+          bossDamagePopup.textContent = '-' + info.damage;
+          bossDamagePopup.className = 'boss-damage-popup rank-' + rank;
+          void bossDamagePopup.offsetWidth;
+          bossDamagePopup.classList.add('play');
 
-      if (currentHp <= 0) {
-        SFX.hpZero();
-        setTimeout(playBossDefeatSequence, RESULT_DISPLAY_MS);
-        return;
-      }
+          if (rank === 'A') {
+            // 会心の一撃:ニヤリ+画面全体を揺らし、金色フラッシュ・稲妻・衝撃波・パーティクル大量発生
+            SFX.critical();
+            setHeroMood('smirk');
+            triggerScreenShake(true);
+            triggerLightning();
+            triggerShockwave('#ffd700');
+            flashOverlay.classList.remove('flash-active', 'flash-gold');
+            void flashOverlay.offsetWidth;
+            flashOverlay.classList.add('flash-active', 'flash-gold');
+            spawnParticles(22, ['#ffd700', '#ffb703', '#fff3b0', '#ff9f1c']);
+          } else if (rank === 'B') {
+            SFX.playerAttack();
+            setTimeout(function () { SFX.bossHit(); }, 90);
+            setHeroMood('smirk');
+            triggerScreenShake(false);
+            triggerShockwave('#38bdf8');
+            spawnParticles(10, ['#38bdf8', '#7dd3fc', '#bae6fd']);
+          } else {
+            // C:手応えは薄いので衝撃波のみ。ニヤリ程度の余裕
+            SFX.playerAttack();
+            setHeroMood('smirk');
+            triggerShockwave('#f87171');
+            cMehCount++;
+            updateStrikeDisplay();
+          }
+          setTimeout(function () { SFX.hpTick(); }, 120);
 
-      if (rank === 'C' && cMehCount >= MAX_C_COUNT) {
-        setTimeout(function () { triggerCounterattack('C'); }, RESULT_DISPLAY_MS);
+          if (currentHp <= 0) {
+            SFX.hpZero();
+            setTimeout(playBossDefeatSequence, RESULT_DISPLAY_MS);
+            return;
+          }
+
+          if (rank === 'C' && cMehCount >= MAX_C_COUNT) {
+            setTimeout(function () { triggerCounterattack('C'); }, RESULT_DISPLAY_MS);
+          } else {
+            setTimeout(function () {
+              refreshPersistentMood();
+              goToNextRound();
+            }, RESULT_DISPLAY_MS);
+          }
+        });
+      }, RANK_READ_MS);
+      return;
+    }
+
+    // ----- 攻撃失敗(D判定):攻撃はせず、警告演出+反撃ゲージ加算のみ -----
+    setTimeout(function () {
+      setHeroMood('anger');
+      triggerScreenShake(true);
+      flashOverlay.classList.remove('flash-active', 'flash-counter');
+      void flashOverlay.offsetWidth;
+      flashOverlay.classList.add('flash-active', 'flash-counter');
+
+      dBadCount++;
+      updateStrikeDisplay();
+
+      if (dBadCount >= MAX_D_COUNT) {
+        setTimeout(function () { triggerCounterattack('D'); }, 500);
       } else {
         setTimeout(function () {
           refreshPersistentMood();
           goToNextRound();
         }, RESULT_DISPLAY_MS);
       }
-      return;
-    }
-
-    // ----- 攻撃失敗(D判定):ダメージなし。魔神は不機嫌に。累計2回で反撃イベント -----
-    setHeroMood('anger');
-    triggerScreenShake(true);
-    flashOverlay.classList.remove('flash-active', 'flash-counter');
-    void flashOverlay.offsetWidth;
-    flashOverlay.classList.add('flash-active', 'flash-counter');
-
-    dBadCount++;
-    updateStrikeDisplay();
-
-    if (dBadCount >= MAX_D_COUNT) {
-      setTimeout(function () { triggerCounterattack('D'); }, 500);
-    } else {
-      setTimeout(function () {
-        refreshPersistentMood();
-        goToNextRound();
-      }, RESULT_DISPLAY_MS);
-    }
+    }, RANK_READ_MS);
   }
 
   // ----- 魔神の反撃イベント -----
