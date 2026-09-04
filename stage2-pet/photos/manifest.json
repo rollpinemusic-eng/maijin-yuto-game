@@ -1,1 +1,202 @@
-[]
+[
+  {
+    "file": "001-dog-newspaper.jpg",
+    "description": "A golden retriever wearing reading glasses sits at a kitchen table, seriously reading a newspaper."
+  },
+  {
+    "file": "002-cat-keyboard.jpg",
+    "description": "A fluffy orange cat sits on top of a laptop keyboard, blocking the screen, with an annoyed expression."
+  },
+  {
+    "file": "003-parrot-hat-cafe.jpg",
+    "description": "A colorful parrot wearing a tiny top hat perches on a cafe counter next to a cup of coffee."
+  },
+  {
+    "file": "004-cow-sunglasses-busstop.jpg",
+    "description": "A cow wearing sunglasses stands at a bus stop as if waiting for a bus."
+  },
+  {
+    "file": "005-raccoon-fridge-pizza.jpg",
+    "description": "A raccoon has opened a refrigerator at night and is holding a slice of pizza."
+  },
+  {
+    "file": "006-penguin-office-desk.jpg",
+    "description": "A penguin wearing a tiny necktie sits at an office desk in front of a computer monitor."
+  },
+  {
+    "file": "007-hamster-toy-car.jpg",
+    "description": "A hamster sits inside a small toy car on a wooden floor."
+  },
+  {
+    "file": "008-owl-headphones-dj.jpg",
+    "description": "An owl wearing large headphones perches on a DJ turntable at night with colorful lights."
+  },
+  {
+    "file": "009-turtle-backpack-hiking.jpg",
+    "description": "A turtle wearing a tiny backpack walks along a forest hiking trail."
+  },
+  {
+    "file": "010-goat-on-car-roof.jpg",
+    "description": "A goat stands on the roof of a parked car in a driveway."
+  },
+  {
+    "file": "011-chicken-boxing-gloves.jpg",
+    "description": "A chicken wearing tiny boxing gloves stands in a small boxing ring."
+  },
+  {
+    "file": "012-sloth-gym-pullup.jpg",
+    "description": "A sloth hangs from a pull-up bar at a gym, appearing to exercise very slowly."
+  },
+  {
+    "file": "013-fox-shopping-cart.jpg",
+    "description": "A fox sits inside a shopping cart in a supermarket parking lot."
+  },
+  {
+    "file": "014-duck-raincoat-umbrella.jpg",
+    "description": "A duck wearing a tiny yellow raincoat holds a small umbrella in the rain."
+  },
+  {
+    "file": "015-pig-spa-cucumber.jpg",
+    "description": "A pig wearing a spa robe lies on a lounge chair with cucumber slices over its eyes."
+  },
+  {
+    "file": "016-man-asleep-coffee-spill.jpg",
+    "description": "A man is asleep at his office desk while coffee has spilled across his paperwork."
+  },
+  {
+    "file": "017-locked-out-pajamas-pizza.jpg",
+    "description": "A person in pajamas stands locked out of their house holding a pizza box, looking confused."
+  },
+  {
+    "file": "018-kid-drawing-wall-dog.jpg",
+    "description": "A child is drawing on a living room wall with crayons while a dog watches with a guilty expression."
+  },
+  {
+    "file": "019-man-stuck-elevator.jpg",
+    "description": "A man in a suit stands awkwardly in a stopped elevator, staring at the ceiling panel."
+  },
+  {
+    "file": "020-businessman-paperwork-pile.jpg",
+    "description": "A businessman is buried under a huge pile of paperwork at his desk, only his head visible."
+  },
+  {
+    "file": "021-yoga-tangled-mat.jpg",
+    "description": "A person doing yoga outdoors has become completely tangled up in the yoga mat."
+  },
+  {
+    "file": "022-dad-grill-flames.jpg",
+    "description": "A man at a backyard barbecue grill jumps back as flames rise dramatically too high."
+  },
+  {
+    "file": "023-bad-parallel-parking.jpg",
+    "description": "A car is parked very badly across two parking spaces with orange cones scattered and knocked over."
+  },
+  {
+    "file": "024-sleeping-on-train-stranger.jpg",
+    "description": "A tired passenger has fallen asleep leaning on a stranger's shoulder on a crowded train."
+  },
+  {
+    "file": "025-kid-under-table-storm.jpg",
+    "description": "A child hides under a dining table with a flashlight during a thunderstorm seen through the window."
+  },
+  {
+    "file": "026-suit-fishing-inflatable-pool.jpg",
+    "description": "A man in a full business suit sits fishing with a rod in a small inflatable kiddie pool in a backyard."
+  },
+  {
+    "file": "027-stuck-revolving-door.jpg",
+    "description": "A person appears stuck inside a glass revolving door at a building entrance, looking startled."
+  },
+  {
+    "file": "028-cereal-3am-kitchen.jpg",
+    "description": "A person in pajamas eats cereal straight from the box in a dark kitchen lit only by the refrigerator light."
+  },
+  {
+    "file": "029-vacuum-snorkel-gear.jpg",
+    "description": "A man vacuums the living room floor while wearing a full snorkel mask and flippers for no apparent reason."
+  },
+  {
+    "file": "030-grocery-bags-about-to-drop.jpg",
+    "description": "A woman struggles to carry an enormous stack of grocery bags that are about to fall from her arms."
+  },
+  {
+    "file": "031-selfie-crowd-photobomb.jpg",
+    "description": "A person tries to take a selfie at a landmark while a large crowd of strangers photobombs behind them."
+  },
+  {
+    "file": "032-mowing-lawn-winter-coat.jpg",
+    "description": "A man mows the lawn on a sunny summer day while wearing a thick winter coat, hat, and gloves."
+  },
+  {
+    "file": "033-kid-head-in-box.jpg",
+    "description": "A child is stuck with their head inside a cardboard box, arms out, in a living room."
+  },
+  {
+    "file": "034-laundry-mountain.jpg",
+    "description": "A person is almost completely buried under a mountain of laundry taller than themselves."
+  },
+  {
+    "file": "035-napping-standing-elevator.jpg",
+    "description": "A tired office worker naps while standing upright, propped against the wall of a crowded elevator."
+  },
+  {
+    "file": "036-bike-on-roof.jpg",
+    "description": "A bicycle is parked upright on the roof of a house, next to the chimney."
+  },
+  {
+    "file": "037-umbrella-open-hallway.jpg",
+    "description": "An open umbrella sits alone in the middle of an indoor hallway, casting a strange shadow."
+  },
+  {
+    "file": "038-floating-chair-pool.jpg",
+    "description": "An office chair floats alone in the middle of a swimming pool with no one around."
+  },
+  {
+    "file": "039-traffic-cone-party-hat.jpg",
+    "description": "A traffic cone wears a tiny colorful party hat, standing alone in the middle of an empty street."
+  },
+  {
+    "file": "040-sock-on-tree-branch.jpg",
+    "description": "A single white sock hangs from a tree branch in the middle of an open field."
+  },
+  {
+    "file": "041-shopping-cart-desert.jpg",
+    "description": "An abandoned shopping cart sits alone in the middle of a vast desert landscape."
+  },
+  {
+    "file": "042-office-chair-busstop.jpg",
+    "description": "An office chair sits alone at an outdoor bus stop bench, as if waiting for the bus."
+  },
+  {
+    "file": "043-flamingo-rooftop.jpg",
+    "description": "A giant inflatable pink flamingo is stuck on the roof of a house."
+  },
+  {
+    "file": "044-ladder-to-cloud.jpg",
+    "description": "A tall wooden ladder leans against a single fluffy cloud in an otherwise clear blue sky."
+  },
+  {
+    "file": "045-vending-machine-forest.jpg",
+    "description": "A lit vending machine stands alone deep in a dense forest, glowing among the trees."
+  },
+  {
+    "file": "046-porta-potty-mountain.jpg",
+    "description": "A portable toilet stands alone on a rocky mountain peak with a scenic view."
+  },
+  {
+    "file": "047-traffic-light-empty-field.jpg",
+    "description": "A single working traffic light stands alone in the middle of an empty grassy field."
+  },
+  {
+    "file": "048-bathtub-parking-lot-ducks.jpg",
+    "description": "An old bathtub sits outdoors in an empty parking lot, filled with dozens of small rubber ducks."
+  },
+  {
+    "file": "049-umbrella-stand-sunny-day.jpg",
+    "description": "An umbrella stand full of many umbrellas sits outside on a bright, clearly sunny day with no clouds."
+  },
+  {
+    "file": "050-shoes-on-powerline.jpg",
+    "description": "A pair of sneakers tied together by their laces hangs from a power line above a quiet street."
+  }
+]
