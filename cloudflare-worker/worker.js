@@ -10,7 +10,7 @@
 //   運用側でPaidプランへ切り替えない限り、1日10,000 Neuronsを超えた分は失敗するだけ)
 
 const ALLOWED_ORIGIN = 'https://rollpinemusic-eng.github.io';
-const MODEL = '@cf/meta/llama-3.2-3b-instruct';
+const MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
 // 魔神ゆうとの人格・審査基準・NG例/OK例をまとめたシステムプロンプト。
 // 「感想を言う」のではなく「回答を材料にもう一段笑いを作る」ことを最優先にしている。
