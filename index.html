@@ -1545,14 +1545,16 @@ html, body {
     click: function () { sfxTone(720, 0.05, { type: 'square', gain: 0.12 }); },
     submit: function () { sfxTone(420, 0.12, { type: 'triangle', toFreq: 760, gain: 0.18 }); },
 
-    rankA: function () {
+    // volumeScale: 魔神ボイスが同時に鳴る場合、ボイスの方が聞こえるよう音量を絞るためのオプション引数(省略時は1=従来通り)
+    rankA: function (volumeScale) {
+      var s = volumeScale != null ? volumeScale : 1;
       [660, 880, 1108, 1320].forEach(function (f, i) {
-        setTimeout(function () { sfxTone(f, 0.26, { type: 'triangle', gain: 0.22 }); }, i * 65);
+        setTimeout(function () { sfxTone(f, 0.26, { type: 'triangle', gain: 0.22 * s }); }, i * 65);
       });
     },
-    rankB: function () { sfxTone(600, 0.18, { type: 'triangle', toFreq: 860, gain: 0.2 }); },
-    rankC: function () { sfxTone(420, 0.16, { type: 'sine', gain: 0.16 }); },
-    rankD: function () { sfxTone(260, 0.32, { type: 'sawtooth', toFreq: 90, gain: 0.2 }); },
+    rankB: function (volumeScale) { var s = volumeScale != null ? volumeScale : 1; sfxTone(600, 0.18, { type: 'triangle', toFreq: 860, gain: 0.2 * s }); },
+    rankC: function (volumeScale) { var s = volumeScale != null ? volumeScale : 1; sfxTone(420, 0.16, { type: 'sine', gain: 0.16 * s }); },
+    rankD: function (volumeScale) { var s = volumeScale != null ? volumeScale : 1; sfxTone(260, 0.32, { type: 'sawtooth', toFreq: 90, gain: 0.2 * s }); },
 
     playerAttack: function () {
       sfxNoise(0.14, { gain: 0.28, filterFreq: 2400 });
@@ -1598,6 +1600,62 @@ html, body {
       });
     }
   };
+
+  // ===== 魔神ゆうと ボイスエンジン =====
+  // audio/manifest.json に列挙されたランクごとの音声ファイルからランダムに1つ選んで再生する。
+  // ・音声ファイルが1つも無いランクは何もしない(無音のまま、既存の演出には一切影響しない)
+  // ・manifest.jsonにファイル名を1行追加するだけで、新しい音声を自動的に再生対象へ組み込める
+  // ・モバイルの自動再生制限を避けるため、既存のSFXと同じ audioCtx(初回タップで解錠済み)経由で再生する
+  var majinVoiceManifest = null; // { A:[...], B:[...], C:[...], D:[...] } 読み込み完了前はnull
+  var majinVoiceBufferCache = {}; // ファイル名 -> decodeAudioData結果(Promise)のキャッシュ
+  var majinVoiceLastPlayed = {}; // ランクごとの直近再生ファイル名(連続再生を避けるため)
+
+  fetch('audio/manifest.json')
+    .then(function (res) { return res.ok ? res.json() : {}; })
+    .then(function (data) { majinVoiceManifest = data || {}; })
+    .catch(function () { majinVoiceManifest = {}; });
+
+  function hasMajinVoice(rank) {
+    return !!(majinVoiceManifest && majinVoiceManifest[rank] && majinVoiceManifest[rank].length);
+  }
+
+  function pickMajinVoiceFile(rank) {
+    var list = majinVoiceManifest && majinVoiceManifest[rank];
+    if (!list || !list.length) return null;
+    if (list.length === 1) return list[0];
+    // 直近再生したファイルを除いた候補から選ぶことで、同じ音声が連続しにくくする
+    var choices = list.filter(function (f) { return f !== majinVoiceLastPlayed[rank]; });
+    if (!choices.length) choices = list;
+    return choices[Math.floor(Math.random() * choices.length)];
+  }
+
+  function loadMajinVoiceBuffer(filename) {
+    if (majinVoiceBufferCache[filename]) return majinVoiceBufferCache[filename];
+    var ctx = getAudioCtx();
+    if (!ctx) return Promise.resolve(null);
+    var promise = fetch('audio/' + filename)
+      .then(function (res) { if (!res.ok) throw new Error('voice fetch failed: ' + filename); return res.arrayBuffer(); })
+      .then(function (buf) { return ctx.decodeAudioData(buf); })
+      .catch(function () { delete majinVoiceBufferCache[filename]; return null; });
+    majinVoiceBufferCache[filename] = promise;
+    return promise;
+  }
+
+  function playMajinVoice(rank) {
+    var filename = pickMajinVoiceFile(rank);
+    if (!filename) return;
+    majinVoiceLastPlayed[rank] = filename;
+    loadMajinVoiceBuffer(filename).then(function (buffer) {
+      var ctx = getAudioCtx();
+      if (!buffer || !ctx) return;
+      var src = ctx.createBufferSource();
+      src.buffer = buffer;
+      var gain = ctx.createGain();
+      gain.gain.value = 0.9;
+      src.connect(gain).connect(ctx.destination);
+      src.start(0);
+    }).catch(function () {});
+  }
 
   // ----- 定数 -----
   var MAX_HP = 1000;          // 魔神HP
@@ -2731,10 +2789,14 @@ html, body {
     damageText.textContent = info.damage > 0 ? '' : 'NO DAMAGE';
     bossLine.textContent = '「' + comment + '」';
 
-    if (rank === 'A') SFX.rankA();
-    else if (rank === 'B') SFX.rankB();
-    else if (rank === 'C') SFX.rankC();
-    else SFX.rankD();
+    // 魔神ボイスが再生される場合は、既存の効果音(ピコン音)の音量を絞ってボイスを聞き取りやすくする
+    var majinVoicePlaying = hasMajinVoice(rank);
+    var rankSfxVolume = majinVoicePlaying ? 0.35 : 1;
+    if (rank === 'A') SFX.rankA(rankSfxVolume);
+    else if (rank === 'B') SFX.rankB(rankSfxVolume);
+    else if (rank === 'C') SFX.rankC(rankSfxVolume);
+    else SFX.rankD(rankSfxVolume);
+    playMajinVoice(rank);
 
     if (info.damage > 0) {
       // ----- 攻撃成功:判定文字を少し見せてから魔神へ撃ち込む -----
