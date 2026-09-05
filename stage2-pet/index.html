@@ -649,8 +649,11 @@ html, body {
 .odai-photo {
   display: block;
   width: 100%;
-  max-height: 96px;
-  object-fit: cover;
+  max-width: 190px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  object-fit: contain;
+  background: #0d0616;
   border-radius: 10px;
   box-shadow: 0 0 0 1px rgba(185, 140, 255, 0.35), 0 4px 14px rgba(0, 0, 0, 0.4);
   transition: opacity 0.2s ease, transform 0.2s ease;
