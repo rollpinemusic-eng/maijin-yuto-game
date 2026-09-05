@@ -38,7 +38,7 @@ html, body {
   height: 100vh;
   height: 100dvh;
   background: #0d0616;
-  padding-bottom: 70px; /* 下部ナビの高さ分 */
+  padding-bottom: 14px; /* 下部ナビを廃止し、画面下端の余白のみ確保 */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1432,20 +1432,8 @@ html, body {
   </section>
 
   <!-- 下部ナビ(ステージ以外は今後実装) -->
-  <nav class="bottom-nav">
-    <button class="nav-item active" type="button">
-      <span class="nav-icon">🗡️</span>ステージ
-    </button>
-    <button class="nav-item disabled" type="button" disabled>
-      <span class="nav-icon">🏆</span>ランキング
-    </button>
-    <button class="nav-item disabled" type="button" disabled>
-      <span class="nav-icon">📖</span>図鑑
-    </button>
-    <button class="nav-item disabled" type="button" disabled>
-      <span class="nav-icon">⚙️</span>設定
-    </button>
-  </nav>
+  <!-- 下部メニュー(ステージ/ランキング/図鑑/設定)はホーム画面(トップのステージ選択)に集約し、
+       プレイ中の画面には表示しない。空いた分は他のUIのバランス調整に使う。 -->
 </div>
 
 <!-- クリア画面 -->
