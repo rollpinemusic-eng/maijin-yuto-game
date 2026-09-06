@@ -1301,6 +1301,162 @@ html, body {
   color: #cdbdea;
 }
 
+/* ===== ステージクリア後の総合評価パネル ===== */
+.grade-panel {
+  margin: 4px 0 20px;
+  padding: 18px 14px;
+  background: linear-gradient(180deg, #1c1030 0%, #140a24 100%);
+  border: 1px solid #ffd700;
+  border-radius: 14px;
+  box-shadow: 0 0 24px rgba(255, 215, 0, 0.25), inset 0 0 0 1px rgba(255, 215, 0, 0.12);
+  text-align: center;
+}
+
+.grade-rank-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #b98cff;
+}
+
+.grade-rank-badge {
+  margin: 4px 0 0;
+  font-size: 44px;
+  font-weight: 900;
+  font-family: "Yuji Syuku", serif;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff3b0 0%, #ffd700 55%, #b8860b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.grade-rank-name {
+  margin: 2px 0 12px;
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffe9a8;
+}
+
+.grade-score-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.grade-score-value {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.grade-score-unit {
+  font-size: 13px;
+  color: #cdbdea;
+}
+
+.grade-counts {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.grade-count-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 38px;
+}
+
+.grade-count-label {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.grade-count-label.rank-A { color: #ffd700; }
+.grade-count-label.rank-B { color: #7dd3fc; }
+.grade-count-label.rank-C { color: #ffb199; }
+.grade-count-label.rank-D { color: #9a8ab8; }
+
+.grade-count-value {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.grade-comment {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #e9d5ff;
+}
+
+.grade-nickname-row {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #4a2f7a;
+  text-align: left;
+}
+
+.grade-nickname-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #cdbdea;
+}
+
+.grade-nickname-input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #4a2f7a;
+  background: #0d0616;
+  color: #fff;
+  font-size: 14px;
+  padding: 9px 12px;
+  font-family: inherit;
+  margin-bottom: 10px;
+}
+
+.grade-nickname-input:focus {
+  outline: none;
+  border-color: #ffd700;
+}
+
+.rank-btn {
+  display: block;
+  width: 100%;
+  border: 1px solid #7fe6c4;
+  border-radius: 999px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #08281f;
+  background: linear-gradient(180deg, #7fe6c4, #22a37e);
+  cursor: pointer;
+  margin: 0;
+}
+
+.rank-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.rank-btn-status {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #a7f3d4;
+  min-height: 14px;
+}
+
 .retry-btn {
   display: inline-block;
   border: 1px solid #b98cff;
@@ -1618,6 +1774,28 @@ html, body {
     <p class="clear-title brush">CLEAR!</p>
     <p class="clear-line">「ぐはぁぁぁ！」</p>
     <p class="clear-desc">魔神のペット（妖精）を撃破した！</p>
+
+    <div class="grade-panel" id="gradePanel">
+      <p class="grade-rank-label">総合評価</p>
+      <p class="grade-rank-badge" id="gradeRankBadge">S</p>
+      <p class="grade-rank-name" id="gradeRankName">芸人レベル</p>
+      <p class="grade-score-row"><span class="grade-score-value" id="gradeScoreValue">0</span><span class="grade-score-unit">点</span></p>
+      <div class="grade-counts">
+        <div class="grade-count-item"><span class="grade-count-label rank-A">A</span><span class="grade-count-value" id="gradeCountA">0</span></div>
+        <div class="grade-count-item"><span class="grade-count-label rank-B">B</span><span class="grade-count-value" id="gradeCountB">0</span></div>
+        <div class="grade-count-item"><span class="grade-count-label rank-C">C</span><span class="grade-count-value" id="gradeCountC">0</span></div>
+        <div class="grade-count-item"><span class="grade-count-label rank-D">D</span><span class="grade-count-value" id="gradeCountD">0</span></div>
+      </div>
+      <p class="grade-comment" id="gradeComment">発想力が素晴らしい！</p>
+
+      <div class="grade-nickname-row">
+        <p class="grade-nickname-label">ニックネームを登録してランキングに挑戦</p>
+        <input type="text" id="rankNicknameInput" class="grade-nickname-input" maxlength="10" placeholder="ニックネーム(10文字まで)">
+        <button id="rankSubmitBtn" class="rank-btn" type="button">現在の順位を見る</button>
+        <p class="rank-btn-status" id="rankBtnStatus"></p>
+      </div>
+    </div>
+
     <a id="nextStageBtn" class="retry-btn next-stage-btn" href="../stage3-majin/index.html">ステージ3へ進む</a>
     <button id="retryBtn" class="retry-btn" type="button">もう一度挑戦する</button>
   </div>
@@ -1872,11 +2050,112 @@ html, body {
 
   // ----- ランク別の設定(ダメージ量・AI不使用時のフォールバック用コメント/セリフ、関西弁) -----
   var RANK_TABLE = {
-    A: { damage: 210 },
-    B: { damage: 135 },
-    C: { damage: 55 },
+    A: { damage: 270 },
+    B: { damage: 170 },
+    C: { damage: 70 },
     D: { damage: 0 }
   };
+
+  // ----- 総合評価(A/B/C/D判定の内部点数から平均点・ランクを算出) -----
+  var STAGE_NUMBER = 2; // このステージの番号(ランキング登録用)
+  var GRADE_POINTS = { A: 100, B: 70, C: 40, D: 10 };
+  var gradeCounts = { A: 0, B: 0, C: 0, D: 0 };
+  var gradeScoreSum = 0;
+  var gradeAnswerCount = 0;
+
+  function recordGradeAnswer(rank) {
+    gradeCounts[rank] = (gradeCounts[rank] || 0) + 1;
+    gradeScoreSum += GRADE_POINTS[rank] || 0;
+    gradeAnswerCount++;
+  }
+
+  function resetGradeStats() {
+    gradeCounts = { A: 0, B: 0, C: 0, D: 0 };
+    gradeScoreSum = 0;
+    gradeAnswerCount = 0;
+  }
+
+  var GRADE_TABLE = [
+    { min: 90, badge: 'SSS', label: 'SSSクラス', name: '魔人ゆうとレベル', requireAceRate: 0.85 },
+    { min: 86, badge: 'SS', label: 'SSクラス', name: '大御所芸人レベル' },
+    { min: 70, badge: 'S', label: 'Sクラス', name: '芸人レベル' },
+    { min: 60, badge: 'A', label: 'Aクラス', name: '芸人の卵' },
+    { min: 50, badge: 'B', label: 'Bクラス', name: 'クラスの面白い人' },
+    { min: 31, badge: 'C', label: 'Cクラス', name: '凡人' },
+    { min: 0, badge: 'D', label: 'Dクラス', name: 'センスなし' }
+  ];
+
+  var GRADE_COMMENTS = {
+    'SSSクラス': ['魔人ゆうとに認められる日も近い！', 'これはもう人間離れした発想力…！', '殿堂入り確定の腕前や！'],
+    'SSクラス': ['大御所の風格すら感じる回答やった！', 'あと一歩でSSSクラスやで！', 'その発想、そろそろ賞レース出れるレベルや！'],
+    'Sクラス': ['発想力が素晴らしい！', 'あと少しで大御所芸人レベルや！', '安定して笑わせにきよるな！'],
+    'Aクラス': ['芸人の卵として十分な実力やで！', 'このセンス、伸びしろしかないな！', 'あと一息でSクラスや！'],
+    'Bクラス': ['クラスで一番面白い人になれる素質あるで！', 'あと少しで芸人の卵レベルやな！', '発想の引き出し、もっと増やせそうやな！'],
+    'Cクラス': ['まだまだこれから！次はもっと自由に発想してみよう！', '発想の種はある、あとは磨くだけやで！'],
+    'Dクラス': ['まずは思いついたまま口に出す練習からや！', '次はもっと勢いで攻めてみよう！']
+  };
+
+  // 平均点からランクを判定する。SSSクラスのみ「平均90点以上」に加えて
+  // 「A攻撃率85%以上」も必須(両方満たさない場合はSSクラスに調整)。
+  function computeGrade() {
+    var avg = gradeAnswerCount > 0 ? gradeScoreSum / gradeAnswerCount : 0;
+    var aRate = gradeAnswerCount > 0 ? gradeCounts.A / gradeAnswerCount : 0;
+    var picked = GRADE_TABLE[GRADE_TABLE.length - 1];
+    for (var gi = 0; gi < GRADE_TABLE.length; gi++) {
+      if (avg >= GRADE_TABLE[gi].min) { picked = GRADE_TABLE[gi]; break; }
+    }
+    if (picked.requireAceRate && aRate < picked.requireAceRate) {
+      picked = GRADE_TABLE[1]; // SSクラスへ調整
+    }
+    return { avg: avg, aRate: aRate, grade: picked };
+  }
+
+  var lastGradeResult = null;
+
+  function showGradePanel() {
+    var result = computeGrade();
+    var avgRounded = Math.round(result.avg * 10) / 10;
+    gradeRankBadge.textContent = result.grade.badge;
+    gradeRankName.textContent = result.grade.name;
+    gradeScoreValue.textContent = avgRounded;
+    gradeCountA.textContent = gradeCounts.A;
+    gradeCountB.textContent = gradeCounts.B;
+    gradeCountC.textContent = gradeCounts.C;
+    gradeCountD.textContent = gradeCounts.D;
+    gradeComment.textContent = pickRandom(GRADE_COMMENTS[result.grade.label] || ['お疲れさま！']);
+
+    lastGradeResult = {
+      avg: avgRounded,
+      grade: result.grade.label,
+      gradeName: result.grade.name,
+      stage: STAGE_NUMBER
+    };
+
+    rankNicknameInput.value = '';
+    try {
+      var savedNickname = localStorage.getItem('majin_nickname');
+      if (savedNickname) rankNicknameInput.value = savedNickname;
+    } catch (e) {}
+    rankSubmitBtn.disabled = false;
+    rankSubmitBtn.textContent = '現在の順位を見る';
+    rankBtnStatus.textContent = '';
+  }
+
+  // ----- ランキング登録 -----
+  var RANKING_API_URL = 'https://maijin-yuto-ranking.rollpinemusic-173.workers.dev';
+
+  function getOrCreatePlayerId() {
+    try {
+      var id = localStorage.getItem('majin_player_id');
+      if (!id) {
+        id = 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('majin_player_id', id);
+      }
+      return id;
+    } catch (e) {
+      return 'p-' + Date.now().toString(36);
+    }
+  }
 
   // ----- AI不使用時の感想を単調にしないための「煽りセリフ生成バンク」 -----
   // 「出だし+審査コメント(発想/意外性/シュールさを評価する一言ツッコミ)+締め」の
@@ -2105,6 +2384,19 @@ html, body {
   var timerNumber = document.getElementById('timerNumber');
   var timerBar = document.getElementById('timerBar');
   var strikeDots = document.querySelectorAll('#strikeDots .dot');
+
+  // ----- 総合評価パネル・ランキング登録用のDOM -----
+  var gradeRankBadge = document.getElementById('gradeRankBadge');
+  var gradeRankName = document.getElementById('gradeRankName');
+  var gradeScoreValue = document.getElementById('gradeScoreValue');
+  var gradeCountA = document.getElementById('gradeCountA');
+  var gradeCountB = document.getElementById('gradeCountB');
+  var gradeCountC = document.getElementById('gradeCountC');
+  var gradeCountD = document.getElementById('gradeCountD');
+  var gradeComment = document.getElementById('gradeComment');
+  var rankNicknameInput = document.getElementById('rankNicknameInput');
+  var rankSubmitBtn = document.getElementById('rankSubmitBtn');
+  var rankBtnStatus = document.getElementById('rankBtnStatus');
 
   // ----- お題ローテーション -----
   function shuffle(arr) {
@@ -2626,6 +2918,7 @@ html, body {
   function applyJudgeResult(rank, aiComment, answer) {
     var info = RANK_TABLE[rank];
     var comment = aiComment || buildFallbackComment(rank, answer);
+    recordGradeAnswer(rank);
 
     resultArea.hidden = false;
     resultCard.className = 'result-card theme-' + rank;
@@ -2930,6 +3223,7 @@ html, body {
   // ----- クリア画面表示(勝利演出つき) -----
   function showClear() {
     clearOverlay.hidden = false;
+    showGradePanel();
     flashOverlay.classList.remove('flash-active', 'flash-gold');
     void flashOverlay.offsetWidth;
     flashOverlay.classList.add('flash-active', 'flash-gold');
@@ -2951,6 +3245,7 @@ html, body {
     playerHp = PLAYER_MAX_HP;
     dBadCount = 0;
     cMehCount = 0;
+    resetGradeStats();
     updateHpDisplay();
     updatePlayerHpDisplay();
     updateStrikeDisplay();
@@ -2991,6 +3286,40 @@ html, body {
   retryBtn.addEventListener('click', function () {
     SFX.click();
     resetGame();
+  });
+  rankSubmitBtn.addEventListener('click', function () {
+    if (!lastGradeResult) return;
+    SFX.click();
+    var nickname = rankNicknameInput.value.trim().slice(0, 10) || '名無し';
+    try { localStorage.setItem('majin_nickname', nickname); } catch (e) {}
+
+    rankSubmitBtn.disabled = true;
+    rankSubmitBtn.textContent = '送信中…';
+    rankBtnStatus.textContent = '';
+
+    var body = {
+      playerId: getOrCreatePlayerId(),
+      nickname: nickname,
+      avgScore: lastGradeResult.avg,
+      grade: lastGradeResult.grade,
+      gradeName: lastGradeResult.gradeName,
+      stage: lastGradeResult.stage
+    };
+
+    fetch(RANKING_API_URL + '/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      if (!res.ok) throw new Error('submit failed');
+      return res.json();
+    }).then(function () {
+      window.location.href = '../ranking.html';
+    }).catch(function () {
+      rankSubmitBtn.disabled = false;
+      rankSubmitBtn.textContent = '現在の順位を見る';
+      rankBtnStatus.textContent = 'ランキングに接続できませんでした。通信環境をご確認のうえもう一度お試しください。';
+    });
   });
   gameOverRetryBtn.addEventListener('click', function () {
     SFX.click();

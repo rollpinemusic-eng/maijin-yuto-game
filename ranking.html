@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ランキング ～大喜利ダンジョン～</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #0d0616;
+  color: #f3eefc;
+  font-family: "Zen Maru Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.brush {
+  font-family: "Yuji Syuku", "Zen Maru Gothic", serif;
+}
+
+.wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 22px 16px 40px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #b98cff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  margin-bottom: 10px;
+}
+
+.page-title {
+  margin: 4px 0 2px;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.2;
+  background: linear-gradient(180deg, #fff3b0 0%, #ffd700 55%, #b8860b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 18px rgba(255, 215, 0, 0.35);
+}
+
+.page-subtitle {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: #cdbdea;
+}
+
+.me-card {
+  background: linear-gradient(180deg, #241534 0%, #1a0f2e 100%);
+  border: 1px solid #ffd700;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 0 24px rgba(255, 215, 0, 0.2);
+}
+
+.me-card-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffd700;
+}
+
+.me-card-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.me-rank {
+  font-size: 22px;
+  font-weight: 900;
+  color: #ffd700;
+  font-variant-numeric: tabular-nums;
+  min-width: 42px;
+}
+
+.me-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.me-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.me-meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #cdbdea;
+}
+
+.me-score {
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.section-label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #b98cff;
+}
+
+.rank-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(180deg, #1a0f2e 0%, #140a24 100%);
+  border: 1px solid #4a2f7a;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.rank-row.is-me {
+  border-color: #ffd700;
+  box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.3);
+}
+
+.rank-row.top1 { border-color: #ffd700; }
+.rank-row.top2 { border-color: #cfd8e3; }
+.rank-row.top3 { border-color: #e0a45c; }
+
+.rank-num {
+  font-size: 16px;
+  font-weight: 900;
+  color: #b98cff;
+  min-width: 28px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-row.top1 .rank-num { color: #ffd700; font-size: 19px; }
+.rank-row.top2 .rank-num { color: #cfd8e3; font-size: 18px; }
+.rank-row.top3 .rank-num { color: #e0a45c; font-size: 18px; }
+
+.rank-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-meta {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: #cdbdea;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-score {
+  font-size: 17px;
+  font-weight: 900;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.state-box {
+  text-align: center;
+  padding: 40px 10px;
+  color: #cdbdea;
+  font-size: 14px;
+}
+
+.retry-btn {
+  display: inline-block;
+  border: 1px solid #b98cff;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+  cursor: pointer;
+  margin-top: 12px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="index.html">← ホームへ戻る</a>
+  <h1 class="page-title brush">ランキング</h1>
+  <p class="page-subtitle">全プレイヤーの自己ベストスコアを表示しています</p>
+
+  <div id="meSection"></div>
+
+  <p class="section-label">TOP プレイヤー</p>
+  <div id="listSection">
+    <div class="state-box" id="stateBox">読み込み中…</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var RANKING_API_URL = 'https://maijin-yuto-ranking.rollpinemusic-173.workers.dev';
+  var STAGE_NAMES = { 1: 'ステージ1クリア', 2: 'ステージ2クリア', 3: 'ステージ3クリア' };
+
+  var meSection = document.getElementById('meSection');
+  var listSection = document.getElementById('listSection');
+
+  function getPlayerId() {
+    try {
+      return localStorage.getItem('majin_player_id') || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function stageLabel(stage) {
+    return STAGE_NAMES[stage] || ('ステージ' + stage);
+  }
+
+  function renderMe(me) {
+    if (!me) {
+      meSection.innerHTML = '';
+      return;
+    }
+    var html = '' +
+      '<div class="me-card">' +
+      '  <p class="me-card-label">あなたの順位</p>' +
+      '  <div class="me-card-row">' +
+      '    <span class="me-rank">' + me.rank + '位</span>' +
+      '    <div class="me-info">' +
+      '      <p class="me-name">' + escapeHtml(me.nickname) + '</p>' +
+      '      <p class="me-meta">' + escapeHtml(me.gradeName) + '(' + escapeHtml(me.grade) + ') ・ ' + stageLabel(me.stage) + '</p>' +
+      '    </div>' +
+      '    <span class="me-score">' + me.avgScore + '点</span>' +
+      '  </div>' +
+      '</div>';
+    meSection.innerHTML = html;
+  }
+
+  function renderList(top, playerId) {
+    if (!top || top.length === 0) {
+      listSection.innerHTML = '<div class="state-box">まだ誰も記録を登録していません。<br>最初のランキング入りを目指そう！</div>';
+      return;
+    }
+    var items = top.map(function (row) {
+      var topClass = row.rank === 1 ? ' top1' : row.rank === 2 ? ' top2' : row.rank === 3 ? ' top3' : '';
+      var meClass = (playerId && row.playerId === playerId) ? ' is-me' : '';
+      return '' +
+        '<li class="rank-row' + topClass + meClass + '">' +
+        '  <span class="rank-num">' + row.rank + '</span>' +
+        '  <div class="rank-info">' +
+        '    <p class="rank-name">' + escapeHtml(row.nickname) + '</p>' +
+        '    <p class="rank-meta">' + escapeHtml(row.gradeName) + '(' + escapeHtml(row.grade) + ') ・ ' + stageLabel(row.stage) + '</p>' +
+        '  </div>' +
+        '  <span class="rank-score">' + row.avgScore + '点</span>' +
+        '</li>';
+    }).join('');
+    listSection.innerHTML = '<ul class="rank-list">' + items + '</ul>';
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function showError() {
+    listSection.innerHTML = '' +
+      '<div class="state-box">' +
+      '  ランキングを読み込めませんでした。<br>通信環境をご確認のうえ、もう一度お試しください。' +
+      '  <br><button class="retry-btn" id="retryLoadBtn" type="button">再読み込み</button>' +
+      '</div>';
+    var btn = document.getElementById('retryLoadBtn');
+    if (btn) btn.addEventListener('click', load);
+  }
+
+  function load() {
+    listSection.innerHTML = '<div class="state-box">読み込み中…</div>';
+    var playerId = getPlayerId();
+    var qs = 'limit=50' + (playerId ? '&playerId=' + encodeURIComponent(playerId) : '');
+    fetch(RANKING_API_URL + '/leaderboard?' + qs)
+      .then(function (res) {
+        if (!res.ok) throw new Error('failed');
+        return res.json();
+      })
+      .then(function (data) {
+        renderMe(data.me);
+        renderList(data.top, playerId);
+      })
+      .catch(showError);
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>
