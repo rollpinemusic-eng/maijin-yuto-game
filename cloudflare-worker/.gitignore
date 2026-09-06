@@ -1,2 +1,2 @@
-cloudflare-worker/.wrangler/
-cloudflare-worker/node_modules/
+.wrangler/
+node_modules/

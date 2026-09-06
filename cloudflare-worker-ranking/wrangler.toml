@@ -5,4 +5,4 @@ compatibility_date = "2026-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "maijin-yuto-ranking-db"
-database_id = "REPLACE_AFTER_WRANGLER_D1_CREATE"
+database_id = "a1f09392-3be4-46ab-978f-ea5cf571443a"
