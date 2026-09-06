@@ -219,6 +219,39 @@ html, body {
   cursor: pointer;
   margin-top: 12px;
 }
+
+.wrap { padding-bottom: 78px; } /* 下部メニュー分の余白 */
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #150c26;
+  border-top: 1px solid #4a2f7a;
+  z-index: 5;
+}
+.nav-item {
+  border: none;
+  background: none;
+  padding: 8px 4px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: #7a6a9a;
+  font-family: inherit;
+  text-decoration: none;
+}
+.nav-icon { font-size: 16px; line-height: 1; }
+.nav-item.active { color: #d9c6ff; }
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.7)); }
+.nav-item.disabled { opacity: 0.4; }
 </style>
 </head>
 <body>
@@ -234,6 +267,21 @@ html, body {
     <div class="state-box" id="stateBox">読み込み中…</div>
   </div>
 </div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html">
+    <span class="nav-icon">🗡️</span>ステージ
+  </a>
+  <button class="nav-item active" type="button">
+    <span class="nav-icon">🏆</span>ランキング
+  </button>
+  <button class="nav-item disabled" type="button" disabled>
+    <span class="nav-icon">📖</span>図鑑
+  </button>
+  <button class="nav-item disabled" type="button" disabled>
+    <span class="nav-icon">⚙️</span>設定
+  </button>
+</nav>
 
 <script>
 (function () {

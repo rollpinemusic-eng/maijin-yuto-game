@@ -101,6 +101,54 @@
     margin-top: 28px;
     line-height: 1.7;
   }
+
+  .nickname-panel {
+    margin-top: 28px;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, #1a0f2e 0%, #140a24 100%);
+    border: 1px solid #4a2f7a;
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 1px rgba(168, 130, 255, 0.12);
+  }
+
+  .nickname-label {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #b98cff;
+  }
+
+  .nickname-input {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #4a2f7a;
+    background: #0d0616;
+    color: #fff;
+    font-size: 14px;
+    padding: 9px 12px;
+    font-family: inherit;
+    margin-bottom: 8px;
+  }
+
+  .nickname-input:focus {
+    outline: none;
+    border-color: #ffd700;
+  }
+
+  .nickname-desc {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #8a76ad;
+  }
+
+  .nickname-saved {
+    margin: 6px 0 0;
+    font-size: 11px;
+    color: #7fe6c4;
+    min-height: 14px;
+  }
   .bottom-nav {
     position: fixed;
     left: 50%;
@@ -169,7 +217,12 @@
     <div class="stage-status lock-label" id="stage3Status">🔒 ステージ2クリアで解放</div>
   </a>
 
-  <p class="footer-note">クリア状況はこの端末に保存されます。<br>各ステージはページ内でいつでもやり直せます。</p>
+  <div class="nickname-panel">
+    <p class="nickname-label">ニックネーム登録</p>
+    <input type="text" id="homeNicknameInput" class="nickname-input" maxlength="10" placeholder="ニックネーム(10文字まで)">
+    <p class="nickname-desc">ニックネームを登録すると自分のランキング順位を見ることができます。</p>
+    <p class="nickname-saved" id="homeNicknameSaved"></p>
+  </div>
 </div>
 
 <!-- ステージ画面から下部メニューを廃止した分、このホーム画面に集約する -->
@@ -209,6 +262,22 @@
     document.getElementById('stage3Status').textContent = '挑戦する ▶';
     document.getElementById('stage3Status').classList.remove('lock-label');
   }
+
+  // ----- ニックネーム登録(ランキング機能で使用。各ステージの結果画面とも共通のキーで保存) -----
+  var homeNicknameInput = document.getElementById('homeNicknameInput');
+  var homeNicknameSaved = document.getElementById('homeNicknameSaved');
+  var nicknameSaveTimer = null;
+  try {
+    var savedNickname = localStorage.getItem('majin_nickname');
+    if (savedNickname) homeNicknameInput.value = savedNickname;
+  } catch (e) {}
+  homeNicknameInput.addEventListener('input', function () {
+    var value = homeNicknameInput.value.trim().slice(0, 10);
+    try { localStorage.setItem('majin_nickname', value); } catch (e) {}
+    homeNicknameSaved.textContent = value ? '保存しました' : '';
+    clearTimeout(nicknameSaveTimer);
+    nicknameSaveTimer = setTimeout(function () { homeNicknameSaved.textContent = ''; }, 1500);
+  });
 })();
 </script>
 </body>

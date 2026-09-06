@@ -1993,10 +1993,23 @@ html, body {
   // ページ内どこかを最初にタップ/クリックした瞬間に解錠しておく
   function unlockAudioOnce() {
     var ctx = getAudioCtx();
-    // 一部のモバイルブラウザ(特にiOS Safari)はpointerdown単発のresume()だけでは
-    // 解錠が完了しないことがあるため、直後にもう一度resume()を試みておく
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(function () {});
+    if (ctx) {
+      // 一部のモバイルブラウザ(特にiOS Safari)はpointerdown単発のresume()だけでは
+      // 解錠が完了しないことがあるため、直後にもう一度resume()を試みておく
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(function () {});
+      }
+      // resume()が成功したように見えても、実際に一度も音を鳴らしていない端末では
+      // 出力パイプライン自体が動き出していないことがあるため、無音のバッファを
+      // 明示的に一度再生してオーディオ出力そのものを起動しておく(定番の解錠テクニック)
+      try {
+        var primeBuffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+        var primeSource = ctx.createBufferSource();
+        primeSource.buffer = primeBuffer;
+        primeSource.connect(ctx.destination);
+        if (primeSource.start) primeSource.start(0);
+        else if (primeSource.noteOn) primeSource.noteOn(0);
+      } catch (e) {}
     }
     document.removeEventListener('pointerdown', unlockAudioOnce);
     document.removeEventListener('keydown', unlockAudioOnce);
