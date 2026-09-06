@@ -1301,43 +1301,68 @@ html, body {
   color: #cdbdea;
 }
 
-/* ===== ステージクリア後の総合評価パネル ===== */
+/* ===== ステージクリア後の総合評価パネル(結果発表演出) ===== */
 .grade-panel {
+  position: relative;
   margin: 4px 0 20px;
-  padding: 18px 14px;
-  background: linear-gradient(180deg, #1c1030 0%, #140a24 100%);
+  padding: 22px 16px 18px;
+  background:
+    radial-gradient(120% 90% at 50% -12%, rgba(255, 215, 0, 0.16) 0%, rgba(255, 215, 0, 0) 55%),
+    linear-gradient(180deg, #241534 0%, #170c28 55%, #120820 100%);
   border: 1px solid #ffd700;
-  border-radius: 14px;
-  box-shadow: 0 0 24px rgba(255, 215, 0, 0.25), inset 0 0 0 1px rgba(255, 215, 0, 0.12);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 215, 0, 0.22),
+    0 0 30px rgba(255, 215, 0, 0.2),
+    0 14px 34px rgba(0, 0, 0, 0.55);
   text-align: center;
+  overflow: hidden;
+  isolation: isolate;
 }
+
+/* 淡く回転する後光(全ランク共通の"結果発表"感。SS/SSSで強度が上がる) */
+.grade-panel::before {
+  content: '';
+  position: absolute;
+  inset: -60% -20%;
+  z-index: -1;
+  background: conic-gradient(from 0deg, rgba(255, 215, 0, 0) 0%, rgba(255, 215, 0, 0.16) 18%, rgba(255, 215, 0, 0) 36%);
+  opacity: 0.6;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .grade-panel::before { animation: gradeAuraSpin 8s linear infinite; }
+}
+@keyframes gradeAuraSpin { to { transform: rotate(360deg); } }
 
 .grade-rank-label {
   margin: 0;
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 3px;
-  color: #b98cff;
+  letter-spacing: 5px;
+  color: #d9c6ff;
 }
 
 .grade-rank-badge {
-  margin: 4px 0 0;
-  font-size: 44px;
+  margin: 8px 0 0;
+  font-size: 64px;
   font-weight: 900;
   font-family: "Yuji Syuku", serif;
   line-height: 1;
+  display: inline-block;
   background: linear-gradient(180deg, #fff3b0 0%, #ffd700 55%, #b8860b 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  text-shadow: 0 0 26px rgba(255, 215, 0, 0.55);
 }
 
 .grade-rank-name {
-  margin: 2px 0 12px;
-  font-size: 16px;
+  margin: 6px 0 16px;
+  font-size: 17px;
   font-weight: 900;
+  letter-spacing: 1px;
   color: #ffe9a8;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .grade-score-row {
@@ -1345,14 +1370,15 @@ html, body {
   align-items: baseline;
   justify-content: center;
   gap: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .grade-score-value {
-  font-size: 26px;
+  font-size: 34px;
   font-weight: 900;
   color: #fff;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
 }
 
 .grade-score-unit {
@@ -1360,19 +1386,38 @@ html, body {
   color: #cdbdea;
 }
 
+.grade-score-caption {
+  margin: 0 0 14px;
+  font-size: 10.5px;
+  letter-spacing: 2px;
+  color: #8f7fb8;
+}
+
+.grade-divider {
+  border: none;
+  height: 1px;
+  margin: 0 auto 14px;
+  width: 70%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.4), transparent);
+}
+
 .grade-counts {
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .grade-count-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  min-width: 38px;
+  gap: 3px;
+  min-width: 40px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .grade-count-label {
@@ -1395,8 +1440,82 @@ html, body {
 .grade-comment {
   margin: 0;
   font-size: 13.5px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: #e9d5ff;
+}
+
+/* ----- 結果を段階的に見せる演出(reduced-motion環境では即表示) ----- */
+@media (prefers-reduced-motion: no-preference) {
+  .grade-panel.is-revealed .grade-rank-label { animation-name: gradeFadeUp; animation-duration: 0.45s; animation-timing-function: ease; animation-fill-mode: both; animation-delay: 0.05s; }
+  .grade-panel.is-revealed .grade-rank-badge { animation-name: rankReveal; animation-duration: 0.7s; animation-timing-function: cubic-bezier(.2, 1.5, .35, 1); animation-fill-mode: both; animation-delay: 0.15s; }
+  .grade-panel.is-revealed .grade-rank-name { animation-name: gradeFadeUp; animation-duration: 0.45s; animation-timing-function: ease; animation-fill-mode: both; animation-delay: 0.55s; }
+  .grade-panel.is-revealed .grade-score-row,
+  .grade-panel.is-revealed .grade-score-caption { animation-name: gradeFadeUp; animation-duration: 0.45s; animation-timing-function: ease; animation-fill-mode: both; animation-delay: 0.7s; }
+  .grade-panel.is-revealed .grade-counts { animation-name: gradeFadeUp; animation-duration: 0.45s; animation-timing-function: ease; animation-fill-mode: both; animation-delay: 0.85s; }
+  .grade-panel.is-revealed .grade-comment { animation-name: gradeFadeUp; animation-duration: 0.45s; animation-timing-function: ease; animation-fill-mode: both; animation-delay: 1.0s; }
+}
+@keyframes gradeFadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ----- ランク階級ごとの色調(D/C=紫系、B/A=水色系、S=金、SS/SSSはさらに豪華に) ----- */
+.grade-panel.tier-D, .grade-panel.tier-C {
+  border-color: #6b5a8a;
+  box-shadow: inset 0 0 0 1px rgba(180, 150, 255, 0.18), 0 10px 26px rgba(0, 0, 0, 0.5);
+}
+.grade-panel.tier-D .grade-rank-badge, .grade-panel.tier-C .grade-rank-badge {
+  background: linear-gradient(180deg, #cbb8ee 0%, #8f7ac9 60%, #5b4a8a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 14px rgba(140, 110, 220, 0.35);
+}
+.grade-panel.tier-D::before, .grade-panel.tier-C::before { opacity: 0.25; }
+
+.grade-panel.tier-B, .grade-panel.tier-A {
+  border-color: #4fa6e0;
+  box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.22), 0 0 22px rgba(56, 189, 248, 0.18), 0 12px 28px rgba(0, 0, 0, 0.5);
+}
+.grade-panel.tier-B .grade-rank-badge, .grade-panel.tier-A .grade-rank-badge {
+  background: linear-gradient(180deg, #bfe3ff 0%, #63b8f5 60%, #1f6fb8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
+}
+.grade-panel.tier-B::before, .grade-panel.tier-A::before { opacity: 0.4; }
+
+.grade-panel.tier-SS {
+  border-color: #ffe27a;
+  box-shadow: inset 0 0 0 1px rgba(255, 226, 122, 0.4), 0 0 40px rgba(255, 215, 0, 0.35), 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+.grade-panel.tier-SS .grade-rank-badge {
+  font-size: 68px;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
+}
+.grade-panel.tier-SS::before { opacity: 0.85; }
+
+.grade-panel.tier-SSS {
+  border-color: #fff3b0;
+  box-shadow: inset 0 0 0 1px rgba(255, 243, 176, 0.55), 0 0 60px rgba(255, 215, 0, 0.55), 0 0 120px rgba(255, 110, 255, 0.2), 0 18px 40px rgba(0, 0, 0, 0.65);
+}
+.grade-panel.tier-SSS .grade-rank-badge {
+  font-size: 76px;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.85), 0 0 60px rgba(255, 110, 255, 0.45);
+}
+.grade-panel.tier-SSS .grade-rank-name {
+  color: #fff7dd;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+.grade-panel.tier-SSS::before { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .grade-panel.tier-SSS { animation-name: gradeSssPulse; animation-duration: 1.7s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+  .grade-panel.tier-SSS::before { animation-duration: 4s; }
+}
+@keyframes gradeSssPulse {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(255, 243, 176, 0.55), 0 0 60px rgba(255, 215, 0, 0.55), 0 0 120px rgba(255, 110, 255, 0.2), 0 18px 40px rgba(0, 0, 0, 0.65); }
+  50%      { box-shadow: inset 0 0 0 1px rgba(255, 243, 176, 0.75), 0 0 90px rgba(255, 215, 0, 0.8), 0 0 170px rgba(255, 110, 255, 0.34), 0 18px 40px rgba(0, 0, 0, 0.65); }
 }
 
 .grade-nickname-row {
@@ -1515,27 +1634,39 @@ html, body {
   background: #1a0f2e;
   border: 1px solid #b98cff;
   border-radius: 18px;
-  padding: 26px 22px;
+  padding: 20px 18px;
   max-width: 400px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 92vh;
   overflow-y: auto;
   box-shadow: 0 0 40px rgba(168, 85, 247, 0.35);
 }
 
+.rules-heading {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 3px 14px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #2a1a00;
+  background: linear-gradient(180deg, #ffd700, #b8860b);
+  border-radius: 999px;
+}
+
 .rules-eyebrow {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 4px;
   color: #b98cff;
 }
 
 .rules-title {
-  margin: 4px 0 2px;
-  font-size: 28px;
+  margin: 2px 0 2px;
+  font-size: 24px;
   font-weight: 900;
-  line-height: 1.3;
+  line-height: 1.25;
   background: linear-gradient(180deg, #e9d5ff 0%, #a855f7 60%, #6d28d9 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1543,36 +1674,36 @@ html, body {
 }
 
 .rules-subtitle {
-  margin: 0 0 14px;
-  font-size: 13px;
+  margin: 0 0 8px;
+  font-size: 12.5px;
   font-weight: 700;
   color: #ff8fb3;
 }
 
 .rules-list {
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   padding-left: 20px;
-  font-size: 14px;
-  line-height: 1.8;
+  font-size: 13px;
+  line-height: 1.55;
   color: #e9d5ff;
 }
 
 .rules-list li {
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .rules-example {
   background: linear-gradient(180deg, #140a24 0%, #1c1030 100%);
   border: 1px solid #4a2f7a;
   border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 20px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
 }
 
 .rules-example-label {
   display: inline-block;
-  margin: 0 0 8px;
-  font-size: 11px;
+  margin: 0 0 6px;
+  font-size: 10.5px;
   font-weight: 700;
   background: #ff2d95;
   color: #fff;
@@ -1583,35 +1714,55 @@ html, body {
 .rules-example-photo {
   display: block;
   width: 100%;
-  max-width: 220px;
+  max-width: 150px;
   aspect-ratio: 1 / 1;
   object-fit: contain;
   background: #0d0616;
   border-radius: 10px;
-  margin: 0 auto 10px;
+  margin: 0 auto 8px;
   box-shadow: 0 0 0 1px rgba(185, 140, 255, 0.35);
 }
 
 .rules-example-q {
-  margin: 0 0 10px;
-  font-size: 15px;
+  margin: 0 0 8px;
+  font-size: 14px;
   font-weight: 700;
   color: #f3eefc;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .rules-example-a-label {
-  margin: 0 0 4px;
-  font-size: 11px;
+  margin: 0 0 3px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #7fe6c4;
 }
 
 .rules-example-a {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   color: #a7f3d4;
-  line-height: 1.6;
+  line-height: 1.5;
+}
+
+/* 写真つきの例題(ステージ2)は横並びにして、縦方向を大きく節約する */
+.rules-example-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.rules-example-row .rules-example-photo {
+  flex-shrink: 0;
+  width: 78px;
+  max-width: 78px;
+  margin: 0;
+}
+
+.rules-example-row .rules-example-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .rules-start-btn {
@@ -1619,8 +1770,8 @@ html, body {
   width: 100%;
   border: 1px solid #ffd700;
   border-radius: 999px;
-  padding: 13px;
-  font-size: 16px;
+  padding: 12px;
+  font-size: 15px;
   font-weight: 900;
   letter-spacing: 2px;
   color: #2a1a00;
@@ -1659,6 +1810,7 @@ html, body {
   <!-- ルール説明画面:ゲーム開始前に表示し、スタートボタンで閉じる -->
   <div class="rules-overlay" id="rulesOverlay">
     <div class="rules-box">
+      <p class="rules-heading">📖 ルール説明</p>
       <p class="rules-eyebrow">STAGE 2</p>
       <h2 class="rules-title brush">魔神のペット<br>（妖精）</h2>
       <p class="rules-subtitle">写真を見て一言コメントを考えるゲームです</p>
@@ -1667,11 +1819,13 @@ html, body {
         <li>写真を見て、思わず笑ってしまうような一言コメントを考えてください</li>
         <li>回答が面白いほど、魔神に大きなダメージを与えられます</li>
       </ul>
-      <div class="rules-example">
-        <p class="rules-example-label">例題(写真)</p>
+      <div class="rules-example rules-example-row">
         <img class="rules-example-photo" src="photos/001-dog-newspaper.jpg" alt="めがねをかけて新聞を真剣に読む犬の例題写真">
-        <p class="rules-example-a-label">模範回答</p>
-        <p class="rules-example-a">「来月からのエサ代値上げの記事だけ食い入るように読んでる」</p>
+        <div class="rules-example-text">
+          <p class="rules-example-label">例題(写真)</p>
+          <p class="rules-example-a-label">模範回答</p>
+          <p class="rules-example-a">「来月からのエサ代値上げの記事だけ食い入るように読んでる」</p>
+        </div>
       </div>
       <button class="rules-start-btn" id="rulesStartBtn" type="button">スタート</button>
     </div>
@@ -1780,6 +1934,8 @@ html, body {
       <p class="grade-rank-badge" id="gradeRankBadge">S</p>
       <p class="grade-rank-name" id="gradeRankName">芸人レベル</p>
       <p class="grade-score-row"><span class="grade-score-value" id="gradeScoreValue">0</span><span class="grade-score-unit">点</span></p>
+      <p class="grade-score-caption">AVERAGE SCORE</p>
+      <hr class="grade-divider">
       <div class="grade-counts">
         <div class="grade-count-item"><span class="grade-count-label rank-A">A</span><span class="grade-count-value" id="gradeCountA">0</span></div>
         <div class="grade-count-item"><span class="grade-count-label rank-B">B</span><span class="grade-count-value" id="gradeCountB">0</span></div>
@@ -1789,7 +1945,7 @@ html, body {
       <p class="grade-comment" id="gradeComment">発想力が素晴らしい！</p>
 
       <div class="grade-nickname-row">
-        <p class="grade-nickname-label">ニックネームを登録してランキングに挑戦</p>
+        <p class="grade-nickname-label">ニックネームを登録してランキング順位を確認</p>
         <input type="text" id="rankNicknameInput" class="grade-nickname-input" maxlength="10" placeholder="ニックネーム(10文字まで)">
         <button id="rankSubmitBtn" class="rank-btn" type="button">現在の順位を見る</button>
         <p class="rank-btn-status" id="rankBtnStatus"></p>
@@ -1842,12 +1998,21 @@ html, body {
   // モバイルは最初のユーザー操作でAudioContextを起こす必要があるため、
   // ページ内どこかを最初にタップ/クリックした瞬間に解錠しておく
   function unlockAudioOnce() {
-    getAudioCtx();
+    var ctx = getAudioCtx();
+    // 一部のモバイルブラウザ(特にiOS Safari)はpointerdown単発のresume()だけでは
+    // 解錠が完了しないことがあるため、直後にもう一度resume()を試みておく
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(function () {});
+    }
     document.removeEventListener('pointerdown', unlockAudioOnce);
     document.removeEventListener('keydown', unlockAudioOnce);
+    document.removeEventListener('click', unlockAudioOnce);
+    document.removeEventListener('touchend', unlockAudioOnce);
   }
   document.addEventListener('pointerdown', unlockAudioOnce);
   document.addEventListener('keydown', unlockAudioOnce);
+  document.addEventListener('click', unlockAudioOnce);
+  document.addEventListener('touchend', unlockAudioOnce);
 
   function sfxTone(freq, dur, opts) {
     var ctx = getAudioCtx();
@@ -2124,6 +2289,22 @@ html, body {
     gradeCountD.textContent = gradeCounts.D;
     gradeComment.textContent = pickRandom(GRADE_COMMENTS[result.grade.label] || ['お疲れさま！']);
 
+    // 結果発表演出:ランク階級に応じた色調・光の強さを反映し、演出をリプレイする
+    gradePanel.className = 'grade-panel tier-' + result.grade.badge;
+    void gradePanel.offsetWidth;
+    gradePanel.classList.add('is-revealed');
+
+    // SS/SSSクラスは特別感を出すため、パーティクルと効果音を追加する
+    if (result.grade.badge === 'SS' || result.grade.badge === 'SSS') {
+      setTimeout(function () {
+        spawnParticles(result.grade.badge === 'SSS' ? 34 : 22, ['#ffd700', '#fff3b0', '#ff6ec7', '#ffffff']);
+        SFX.critical();
+        if (result.grade.badge === 'SSS') {
+          setTimeout(function () { SFX.victory(); }, 200);
+        }
+      }, 550);
+    }
+
     lastGradeResult = {
       avg: avgRounded,
       grade: result.grade.label,
@@ -2386,6 +2567,7 @@ html, body {
   var strikeDots = document.querySelectorAll('#strikeDots .dot');
 
   // ----- 総合評価パネル・ランキング登録用のDOM -----
+  var gradePanel = document.getElementById('gradePanel');
   var gradeRankBadge = document.getElementById('gradeRankBadge');
   var gradeRankName = document.getElementById('gradeRankName');
   var gradeScoreValue = document.getElementById('gradeScoreValue');
@@ -3339,6 +3521,7 @@ html, body {
   var rulesOverlay = document.getElementById('rulesOverlay');
   var rulesStartBtn = document.getElementById('rulesStartBtn');
   rulesStartBtn.addEventListener('click', function () {
+    unlockAudioOnce();
     SFX.click();
     rulesOverlay.hidden = true;
     photoListReady.then(function () {
