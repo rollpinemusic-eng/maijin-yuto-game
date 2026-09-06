@@ -1311,6 +1311,135 @@ html, body {
   background: linear-gradient(180deg, #ff5252, #a50f0f);
 }
 
+/* ===== ルール説明画面(ステージ開始前に表示し、スタートボタンで閉じる) ===== */
+.rules-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 4, 24, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 60;
+}
+
+.rules-box {
+  background: #1a0f2e;
+  border: 1px solid #b98cff;
+  border-radius: 18px;
+  padding: 26px 22px;
+  max-width: 400px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.35);
+}
+
+.rules-eyebrow {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #b98cff;
+}
+
+.rules-title {
+  margin: 4px 0 2px;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.3;
+  background: linear-gradient(180deg, #e9d5ff 0%, #a855f7 60%, #6d28d9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.rules-subtitle {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff8fb3;
+}
+
+.rules-list {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #e9d5ff;
+}
+
+.rules-list li {
+  margin-bottom: 4px;
+}
+
+.rules-example {
+  background: linear-gradient(180deg, #140a24 0%, #1c1030 100%);
+  border: 1px solid #4a2f7a;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.rules-example-label {
+  display: inline-block;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #ff2d95;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.rules-example-photo {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  background: #0d0616;
+  border-radius: 10px;
+  margin: 0 auto 10px;
+  box-shadow: 0 0 0 1px rgba(185, 140, 255, 0.35);
+}
+
+.rules-example-q {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f3eefc;
+  line-height: 1.5;
+}
+
+.rules-example-a-label {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7fe6c4;
+}
+
+.rules-example-a {
+  margin: 0;
+  font-size: 14px;
+  color: #a7f3d4;
+  line-height: 1.6;
+}
+
+.rules-start-btn {
+  display: block;
+  width: 100%;
+  border: 1px solid #ffd700;
+  border-radius: 999px;
+  padding: 13px;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #2a1a00;
+  background: linear-gradient(180deg, #ffd700, #b8860b);
+  cursor: pointer;
+}
+
 @media (min-width: 600px) {
   .app {
     margin-top: 20px;
@@ -1338,6 +1467,27 @@ html, body {
 <div class="lightning-overlay" id="lightningOverlay"></div>
 
 <div class="app">
+
+  <!-- ルール説明画面:ゲーム開始前に表示し、スタートボタンで閉じる -->
+  <div class="rules-overlay" id="rulesOverlay">
+    <div class="rules-box">
+      <p class="rules-eyebrow">STAGE 3</p>
+      <h2 class="rules-title brush">魔神ゆうと</h2>
+      <p class="rules-subtitle">一般大喜利(最終ステージ)</p>
+      <ul class="rules-list">
+        <li>「お題」が表示されます</li>
+        <li>お題に対して、自由な発想で面白い回答を考えてください</li>
+        <li>回答が面白いほど、魔神に大きなダメージを与えられます</li>
+      </ul>
+      <div class="rules-example">
+        <p class="rules-example-label">例題(お題)</p>
+        <p class="rules-example-q">「こんな学校は嫌だ。どんな学校？」</p>
+        <p class="rules-example-a-label">模範回答</p>
+        <p class="rules-example-a">「校長先生が毎朝ガチャで決まる」</p>
+      </div>
+      <button class="rules-start-btn" id="rulesStartBtn" type="button">スタート</button>
+    </div>
+  </div>
 
   <!-- ヒーロー:ボス演出エリア(生成イラスト使用) -->
   <section class="hero" id="heroEl">
@@ -1389,7 +1539,7 @@ html, body {
     <div class="odai-row">
       <div class="odai-col">
         <p class="odai-label">お題</p>
-        <p class="odai-text" id="odaiText">こんな床屋は嫌だ、どんな床屋？</p>
+        <p class="odai-text" id="odaiText"></p>
       </div>
     </div>
 
@@ -2022,14 +2172,82 @@ html, body {
     { text: 'テニスの試合中、まさかの理由で観客がざわついた。それは？', model: 'ボールボーイの動きがプロ並みだった' },
     { text: 'スキー場のリフト、まさかの会話が飛び交っていた。それは？', model: '初心者同士の励まし合い' },
     { text: 'フィギュアスケートの演技後、まさかのコメントを残した。何と言った？', model: '「一番緊張したのは衣装の着替えです」' },
-    { text: '草野球の試合、まさかの理由で延長になった。それは？', model: '全員が終電を気にしつつも本気を出した' }
+    { text: '草野球の試合、まさかの理由で延長になった。それは？', model: '全員が終電を気にしつつも本気を出した' },
+
+    // ----- 追加分(2026-09-06) -----
+    { text: '新入社員が入社初日に放った、先輩ドン引きの一言とは？', model: '「タイムカードって手書きでいいですよね？」' },
+    { text: '会社の朝礼、社長が急に始めた謎の習慣とは？', model: '「今日のラッキーカラー」を発表してから仕事に入る' },
+    { text: '取引先に送るはずのメール、まさかの誤送信内容とは？', model: '愚痴だけをまとめた「本音メモ」をそのまま送ってしまった' },
+    { text: 'この会議室、入るとみんな覚悟を決める。何がある部屋？', model: '「進捗どうですか」しか言わない椅子が置いてある' },
+    { text: '定年退職の挨拶で、まさかの本音を言ってしまった。何て言った？', model: '「実は35年間、社長の名前を間違えてました」' },
+    { text: '面接で聞かれて、思わず変な汗をかいた質問とは？', model: '「前世の職務経歴も教えてください」' },
+    { text: 'オフィスの休憩室に、まさかの張り紙がしてある。何て書いてある？', model: '「電子レンジで魂まで温めないでください」' },
+    { text: '社内アンケートの自由記述欄、まさかの回答が殺到した。何て書かれていた？', model: '「上司の相槌のバリエーションを増やしてほしい」' },
+
+    { text: 'この学校の卒業証書、普通と何かが違う。何が違う？', model: '裏面に「返却期限：一生」と書かれている' },
+    { text: '担任の先生が生徒に配った、まさかのプリントとは？', model: '「明日から使える言い訳一覧」' },
+    { text: '体育祭の応援合戦、まさかの演目をやった。何をやった？', model: '「先生の物真似選手権」を全学年でやった' },
+    { text: 'この高校、部活動の種類がちょっと変わっている。どんな部活がある？', model: '「屋上で夕日を見るだけ部」が甲子園より人気' },
+    { text: '進路相談で先生に言われた、まさかの一言とは？', model: '「君、就職より先に成仏した方がいいかもしれない」' },
+    { text: '転校生が自己紹介でやってしまった、まさかの失敗とは？', model: '前の学校の校歌を熱唱してしまった' },
+    { text: 'この中学校の生徒手帳、まさかのページがある。何が書いてある？', model: '「先生の機嫌の直し方」が付録でついている' },
+    { text: '卒業アルバムの「将来の夢」欄、一人だけまさかのことを書いていた。何て書いた？', model: '「担任の先生を超えること」' },
+
+    { text: 'この家の冷蔵庫、開けるとまさかのルールが貼ってある。何て書いてある？', model: '「賞味期限は目安であり希望である」' },
+    { text: '実家に帰ったら、母親がまさかのことを始めていた。何をしていた？', model: '飼い犬にリモコンの使い方を教え始めていた' },
+    { text: '近所の公園に、まさかの注意書きが増えていた。何て書いてある？', model: '「鳩に人生相談をしないでください」' },
+    { text: 'このマンション、住民の間でまさかのルールがある。どんなルール？', model: 'エレベーターで会ったら世間話を3分以内に終わらせる' },
+    { text: '祖父の遺品を整理していたら、まさかの物が出てきた。それは何？', model: '若い頃に書いた「モテるための必勝法ノート」' },
+    { text: '夫婦喧嘩の仲直りに、妻がまさかの提案をした。何を提案した？', model: '「今日だけ敬語でしゃべろう」' },
+    { text: 'このゴミ捨て場、まさかのルールが増えていた。どんなルール？', model: '「粗大ゴミには一言メッセージカードを添える」' },
+    { text: '実家の犬が、飼い主より先に覚えてしまった芸とは？', model: '玄関のチャイムより先に宅配業者の足音で吠える' },
+    { text: '親戚の集まりで、おばあちゃんがまさかの特技を披露した。何の特技？', model: '孫全員の携帯電話番号を暗算のように覚えている' },
+
+    { text: 'この魔法の杖、実は性能に少し問題がある。どんな問題？', model: '呪文を唱えるたびに敬語で確認してくる' },
+    { text: 'ドラゴンを倒しに来た勇者、まさかの理由で引き返した。なぜ？', model: 'ドラゴンの寝顔が可愛すぎて起こせなかった' },
+    { text: 'この異世界、召喚された人間にまさかの職業を求めてくる。何の職業？', model: '「経費精算に詳しい人」' },
+    { text: '魔王城の受付でまさかの対応をされた。何をされた？', model: '「本日の討伐予約でお間違いないでしょうか」と丁寧に確認された' },
+    { text: 'この妖精、願いを叶えてくれるがまさかの条件がある。どんな条件？', model: '願いを叶える代わりに愚痴を30分聞かなければならない' },
+    { text: '賢者に弟子入りしたら、まさかの修行から始まった。何の修行？', model: '「まず挨拶の声量を鍛える」ことから始まった' },
+    { text: 'このダンジョン、攻略しようとするとまさかの妨害をしてくる。何をされる？', model: '宝箱を開けるたびにアンケートに答えさせられる' },
+    { text: '不老不死の薬を手に入れた男、まさかの理由で捨てた。なぜ？', model: '「毎年年齢確認されるのが逆に面倒になった」' },
+    { text: 'この呪いのアイテム、効果がちょっとしょぼい。どんな呪い？', model: '身につけると信号に3回連続で引っかかる' },
+
+    { text: '未来のコンビニ、まさかのサービスが導入されている。何のサービス？', model: 'レジで今日の運勢を占ってから会計してくれる' },
+    { text: 'このAI家電、まさかの機能を勝手に搭載していた。何の機能？', model: '掃除機が掃除しながら人生相談に乗ってくる' },
+    { text: '自動運転の車、まさかの理由で目的地に着かない。なぜ？', model: '景色がいいところで勝手に寄り道を始める' },
+    { text: '未来の役所、手続きがまさかの方法に変わっていた。どんな方法？', model: '書類の代わりに脳波でやる気を測定される' },
+    { text: 'このロボット掃除機、まさかの副業をしている。何の副業？', model: '夜な夜な家具の配置を勝手に模様替えする' },
+    { text: '宇宙ステーションの食堂、まさかのメニューが人気だった。何のメニュー？', model: '「地球の味に一番近い給食セット」' },
+    { text: '未来の学校で、まさかの教科書に変わっていた。どんな教科書？', model: '内容が読者の理解度に合わせてリアルタイムで変化する' },
+    { text: 'このスマート冷蔵庫、まさかの説教をしてくる。何と言われる？', model: '「またその時間に夜食ですか」と毎回同じ声で言われる' },
+    { text: '火星に移住した人類、まさかのことに一番苦労している。何に苦労している？', model: '地球の実家からの荷物が届くのに半年かかること' },
+
+    { text: '動物園のパンダ、まさかの理由で人気が爆発した。なぜ？', model: '飼育員より先に来園者の顔と名前を覚えていたから' },
+    { text: 'この猫、まさかの副業をしていることが発覚した。何の副業？', model: '夜な夜な近所の猫たちの相談役をしている' },
+    { text: '水族館のペンギンパレード、まさかのハプニングが起きた。何が起きた？', model: 'ペンギンが飼育員より先に整列してお客さんを誘導し始めた' },
+    { text: 'このカラス、まさかの特技を持っていた。何の特技？', model: 'ゴミ収集車の曜日を人間より正確に覚えている' },
+    { text: '牧場の羊、まさかの理由で毛刈りを嫌がる。なぜ？', model: '毛が伸びるたびに褒められるのが快感になっている' },
+    { text: 'この山奥の温泉、猿がまさかの利用マナーを守っている。どんなマナー？', model: '譲り合いのじゃんけんで入る順番を決めている' },
+    { text: '飼い主より先に天気を当てるこの犬、まさかの予知法とは？', model: '腰の古傷が痛み出すタイミングで雨を当てる' },
+    { text: 'この動物園の飼育員、まさかの理由で人気者になった。なぜ？', model: '動物の気持ちを勝手に実況する副音声トークが評判になったから' },
+    { text: '田んぼのかかし、まさかの理由で村の名物になった。なぜ？', model: '毎年少しずつ服のセンスが良くなっていくから' },
+
+    { text: '草野球チーム、まさかの理由で急に強くなった。なぜ？', model: '負けるたびに監督の説教が長くなるのを全員が嫌がったから' },
+    { text: 'マラソン大会の給水所、まさかのサービスを始めた。何のサービス？', model: '水と一緒に「あと少し」しか書いていない励ましメモを渡す' },
+    { text: 'この少年野球チーム、応援団がまさかのことをしている。何をしている？', model: '相手チームの子の名前まで全力で応援している' },
+    { text: 'ボクシングの試合前、選手がまさかの行動をした。何をした？', model: '相手選手と控室で晩ごはんの相談を始めた' },
+    { text: 'この卓球部、まさかの理由で県大会常連になった。なぜ？', model: '素振りではなく「相手を励ます練習」を毎日やっているから' },
+    { text: 'サッカーの試合、審判がまさかの判定基準を使っている。どんな基準？', model: '「今の反則、正直に言ったら見逃す」制度を導入している' },
+    { text: 'この登山サークル、まさかのルールで有名になった。どんなルール？', model: '山頂に着いたら全員で反省会をしてから下山する' },
+    { text: '相撲部屋の朝稽古、まさかの理由で見学者が急増した。なぜ？', model: '力士がちゃんこを作る過程の実況が面白すぎるから' }
   ];
 
   // ----- ランク別の設定(ダメージ量・AI不使用時のフォールバック用コメント/セリフ、関西弁) -----
   var RANK_TABLE = {
-    A: { damage: 400 },
-    B: { damage: 250 },
-    C: { damage: 100 },
+    A: { damage: 135 },
+    B: { damage: 85 },
+    C: { damage: 35 },
     D: { damage: 0 }
   };
 
@@ -3149,12 +3367,23 @@ html, body {
   });
 
   // ----- 初期表示 -----
-  currentOdai = ODAI_LIST[0];
   heroEl.style.backgroundImage = 'url("' + HERO_IMAGES.normal + '")';
   updateHpDisplay();
   updatePlayerHpDisplay();
   updateStrikeDisplay();
-  startTimer();
+
+  // ----- ルール説明画面 -----
+  // 「スタート」ボタンを押すまでお題抽選・タイマー開始を行わない。
+  // (以前はODAI_LIST[0]を直接表示しており、初回だけ必ず同じ問題になっていたため、
+  //  他の問題と同じくシャッフルキュー経由のnextOdai()を使うよう修正)
+  var rulesOverlay = document.getElementById('rulesOverlay');
+  var rulesStartBtn = document.getElementById('rulesStartBtn');
+  rulesStartBtn.addEventListener('click', function () {
+    SFX.click();
+    rulesOverlay.hidden = true;
+    setOdai(nextOdai());
+    startTimer();
+  });
 })();
 </script>
 </body>

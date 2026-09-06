@@ -1343,6 +1343,135 @@ html, body {
   background: linear-gradient(180deg, #ff5252, #a50f0f);
 }
 
+/* ===== ルール説明画面(ステージ開始前に表示し、スタートボタンで閉じる) ===== */
+.rules-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 4, 24, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 60;
+}
+
+.rules-box {
+  background: #1a0f2e;
+  border: 1px solid #b98cff;
+  border-radius: 18px;
+  padding: 26px 22px;
+  max-width: 400px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.35);
+}
+
+.rules-eyebrow {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #b98cff;
+}
+
+.rules-title {
+  margin: 4px 0 2px;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.3;
+  background: linear-gradient(180deg, #e9d5ff 0%, #a855f7 60%, #6d28d9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.rules-subtitle {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff8fb3;
+}
+
+.rules-list {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #e9d5ff;
+}
+
+.rules-list li {
+  margin-bottom: 4px;
+}
+
+.rules-example {
+  background: linear-gradient(180deg, #140a24 0%, #1c1030 100%);
+  border: 1px solid #4a2f7a;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.rules-example-label {
+  display: inline-block;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #ff2d95;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.rules-example-photo {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  background: #0d0616;
+  border-radius: 10px;
+  margin: 0 auto 10px;
+  box-shadow: 0 0 0 1px rgba(185, 140, 255, 0.35);
+}
+
+.rules-example-q {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f3eefc;
+  line-height: 1.5;
+}
+
+.rules-example-a-label {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7fe6c4;
+}
+
+.rules-example-a {
+  margin: 0;
+  font-size: 14px;
+  color: #a7f3d4;
+  line-height: 1.6;
+}
+
+.rules-start-btn {
+  display: block;
+  width: 100%;
+  border: 1px solid #ffd700;
+  border-radius: 999px;
+  padding: 13px;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #2a1a00;
+  background: linear-gradient(180deg, #ffd700, #b8860b);
+  cursor: pointer;
+}
+
 @media (min-width: 600px) {
   .app {
     margin-top: 20px;
@@ -1370,6 +1499,27 @@ html, body {
 <div class="lightning-overlay" id="lightningOverlay"></div>
 
 <div class="app">
+
+  <!-- ルール説明画面:ゲーム開始前に表示し、スタートボタンで閉じる -->
+  <div class="rules-overlay" id="rulesOverlay">
+    <div class="rules-box">
+      <p class="rules-eyebrow">STAGE 2</p>
+      <h2 class="rules-title brush">魔神のペット<br>（妖精）</h2>
+      <p class="rules-subtitle">写真を見て一言コメントを考えるゲームです</p>
+      <ul class="rules-list">
+        <li>1枚の写真が表示されます</li>
+        <li>写真を見て、思わず笑ってしまうような一言コメントを考えてください</li>
+        <li>回答が面白いほど、魔神に大きなダメージを与えられます</li>
+      </ul>
+      <div class="rules-example">
+        <p class="rules-example-label">例題(写真)</p>
+        <img class="rules-example-photo" src="photos/001-dog-newspaper.jpg" alt="めがねをかけて新聞を真剣に読む犬の例題写真">
+        <p class="rules-example-a-label">模範回答</p>
+        <p class="rules-example-a">「来月からのエサ代値上げの記事だけ食い入るように読んでる」</p>
+      </div>
+      <button class="rules-start-btn" id="rulesStartBtn" type="button">スタート</button>
+    </div>
+  </div>
 
   <!-- ヒーロー:ボス演出エリア(生成イラスト使用) -->
   <section class="hero" id="heroEl">
@@ -1722,9 +1872,9 @@ html, body {
 
   // ----- ランク別の設定(ダメージ量・AI不使用時のフォールバック用コメント/セリフ、関西弁) -----
   var RANK_TABLE = {
-    A: { damage: 400 },
-    B: { damage: 250 },
-    C: { damage: 100 },
+    A: { damage: 210 },
+    B: { damage: 135 },
+    C: { damage: 55 },
     D: { damage: 0 }
   };
 
@@ -2853,18 +3003,28 @@ html, body {
   updateHpDisplay();
   updatePlayerHpDisplay();
   updateStrikeDisplay();
-  photoListReady.then(function () {
-    if (ODAI_LIST.length === 0) {
-      // 写真がまだ1枚も登録されていない場合は、ゲームを開始せず準備中である旨を表示する
-      odaiText.hidden = false;
-      odaiText.textContent = '準備中です。写真が追加されるまでお待ちください。';
-      bossLine.textContent = '「まだ写真が用意できとらんな…出直してこい。」';
-      submitBtn.disabled = true;
-      answerInput.disabled = true;
-      return;
-    }
-    setOdai(nextOdai());
-    startTimer();
+
+  // ----- ルール説明画面 -----
+  // 「スタート」ボタンを押すまでお題抽選・タイマー開始を行わない。
+  // (写真の読み込み(photoListReady)が終わっていない場合は、読み込み完了を待ってから開始する)
+  var rulesOverlay = document.getElementById('rulesOverlay');
+  var rulesStartBtn = document.getElementById('rulesStartBtn');
+  rulesStartBtn.addEventListener('click', function () {
+    SFX.click();
+    rulesOverlay.hidden = true;
+    photoListReady.then(function () {
+      if (ODAI_LIST.length === 0) {
+        // 写真がまだ1枚も登録されていない場合は、ゲームを開始せず準備中である旨を表示する
+        odaiText.hidden = false;
+        odaiText.textContent = '準備中です。写真が追加されるまでお待ちください。';
+        bossLine.textContent = '「まだ写真が用意できとらんな…出直してこい。」';
+        submitBtn.disabled = true;
+        answerInput.disabled = true;
+        return;
+      }
+      setOdai(nextOdai());
+      startTimer();
+    });
   });
 })();
 </script>

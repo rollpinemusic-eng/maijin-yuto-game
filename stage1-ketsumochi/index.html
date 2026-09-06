@@ -1339,6 +1339,135 @@ html, body {
   background: linear-gradient(180deg, #ff5252, #a50f0f);
 }
 
+/* ===== ルール説明画面(ステージ開始前に表示し、スタートボタンで閉じる) ===== */
+.rules-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 4, 24, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 60;
+}
+
+.rules-box {
+  background: #1a0f2e;
+  border: 1px solid #b98cff;
+  border-radius: 18px;
+  padding: 26px 22px;
+  max-width: 400px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.35);
+}
+
+.rules-eyebrow {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #b98cff;
+}
+
+.rules-title {
+  margin: 4px 0 2px;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.3;
+  background: linear-gradient(180deg, #e9d5ff 0%, #a855f7 60%, #6d28d9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.rules-subtitle {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff8fb3;
+}
+
+.rules-list {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #e9d5ff;
+}
+
+.rules-list li {
+  margin-bottom: 4px;
+}
+
+.rules-example {
+  background: linear-gradient(180deg, #140a24 0%, #1c1030 100%);
+  border: 1px solid #4a2f7a;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.rules-example-label {
+  display: inline-block;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #ff2d95;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.rules-example-photo {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  background: #0d0616;
+  border-radius: 10px;
+  margin: 0 auto 10px;
+  box-shadow: 0 0 0 1px rgba(185, 140, 255, 0.35);
+}
+
+.rules-example-q {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f3eefc;
+  line-height: 1.5;
+}
+
+.rules-example-a-label {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7fe6c4;
+}
+
+.rules-example-a {
+  margin: 0;
+  font-size: 14px;
+  color: #a7f3d4;
+  line-height: 1.6;
+}
+
+.rules-start-btn {
+  display: block;
+  width: 100%;
+  border: 1px solid #ffd700;
+  border-radius: 999px;
+  padding: 13px;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #2a1a00;
+  background: linear-gradient(180deg, #ffd700, #b8860b);
+  cursor: pointer;
+}
+
 @media (min-width: 600px) {
   .app {
     margin-top: 20px;
@@ -1366,6 +1495,27 @@ html, body {
 <div class="lightning-overlay" id="lightningOverlay"></div>
 
 <div class="app">
+
+  <!-- ルール説明画面:ゲーム開始前に表示し、スタートボタンで閉じる -->
+  <div class="rules-overlay" id="rulesOverlay">
+    <div class="rules-box">
+      <p class="rules-eyebrow">STAGE 1</p>
+      <h2 class="rules-title brush">魔神のケツモチ</h2>
+      <p class="rules-subtitle">ツッコミからボケを考えるゲームです</p>
+      <ul class="rules-list">
+        <li>先に「ツッコミ」が表示されます</li>
+        <li>そのツッコミが成立するような「ボケ」を考えて回答してください</li>
+        <li>回答が面白いほど、魔神に大きなダメージを与えられます</li>
+      </ul>
+      <div class="rules-example">
+        <p class="rules-example-label">例題(ツッコミ)</p>
+        <p class="rules-example-q">「お前実は宇宙人やろ」</p>
+        <p class="rules-example-a-label">模範回答(ボケ)</p>
+        <p class="rules-example-a">「人間ドックがなぜか自分だけNASAで行われる」</p>
+      </div>
+      <button class="rules-start-btn" id="rulesStartBtn" type="button">スタート</button>
+    </div>
+  </div>
 
   <!-- ヒーロー:ボス演出エリア(生成イラスト使用) -->
   <section class="hero" id="heroEl">
@@ -1416,7 +1566,7 @@ html, body {
     <div class="odai-row">
       <div class="odai-col">
         <p class="odai-label odai-label-rule">このツッコミが成立するボケを考えてください</p>
-        <p class="odai-text" id="odaiText">こんな床屋は嫌だ、どんな床屋？</p>
+        <p class="odai-text" id="odaiText"></p>
       </div>
     </div>
 
@@ -2019,14 +2169,81 @@ html, body {
     { text: 'お前、尾行の癖抜けてへんやろ', model: '駅で気になった人を無意識に3駅分観察してしまう' },
     { text: 'その目つき、刑事やろ', model: '取調室でもないのに詰め寄るように話を聞いてしまう' },
     { text: 'お前実は潜入して何年も経ってるやろ', model: '会社の設立年より在籍期間の方が長いことになっている' },
-    { text: 'お前、正体明かすタイミング逃してへんか', model: '手帳を見せそうになって毎回慌てて閉じる' }
+    { text: 'お前、正体明かすタイミング逃してへんか', model: '手帳を見せそうになって毎回慌てて閉じる' },
+
+    // ----- 追加分(2026-09-06) -----
+    { text: 'お前実は覆面レスラーやろ', model: '体育祭のリレーで謎に入場曲を要求する' },
+    { text: 'あんた絶対覆面レスラーやろ', model: '職員室に呼ばれるとき謎にロープに走って助走をつける' },
+    { text: 'お前ほんまは覆面レスラーと違うか', model: '自己紹介で必殺技の名前を名乗りそうになる' },
+    { text: 'なんでお前そんな覆面レスラーっぽいんや', model: '椅子に座るとき観客に投げキッスしそうな仕草をする' },
+    { text: 'お前、正体隠すの下手すぎるやろ', model: '覆面のゴムの跡が顔にくっきり残っている' },
+    { text: 'その入場、覆面レスラーやろ', model: '遅刻して教室に入るとき両手を広げて一礼する' },
+    { text: 'お前実は伝説のレスラーやろ', model: '引退したはずなのに毎年謎のタイミングで復帰してくる' },
+    { text: 'お前、レスラーにしてはヒール役に徹しきれてへんやろ', model: 'ブーイングされるとすぐしょんぼりする' },
+    { text: 'お前実は正体不明の新人レスラーやろ', model: 'プロフィール欄が「詳細不明」のまま3年経つ' },
+    { text: 'お前、覆面レスラーバレバレやぞ', model: '声だけで学生時代の同級生に気づかれた' },
+
+    { text: 'お前実は鬼やろ', model: '豆まきの日だけ有給を取る' },
+    { text: 'あんた絶対鬼やろ', model: '説教のとき角が生えそうなくらい怒りの気配がすごい' },
+    { text: 'お前ほんまは鬼と違うか', model: '忘年会の罰ゲームで金棒を持ってきた' },
+    { text: 'なんでお前そんな鬼っぽいんや', model: '冬でも赤ら顔で肌着一枚で平気そうにしている' },
+    { text: 'お前、鬼のくせに涙もろすぎるやろ', model: '感動する話を聞くと角を隠して泣く' },
+    { text: 'その怖さ、鬼やろ', model: '遅刻した後輩を見る目が閻魔様レベル' },
+    { text: 'お前実は改心した元・鬼やろ', model: '節分のたびに古傷がうずくと言っている' },
+    { text: 'お前、鬼にしては優しすぎるやろ', model: '退治されそうになった桃太郎を逆に励ました' },
+    { text: 'お前実は鬼ヶ島出身やろ', model: '履歴書の本籍地の欄が地図に載っていない' },
+    { text: 'お前、鬼バレバレやぞ', model: '靴を脱いだら踵の位置が明らかにおかしい' },
+
+    { text: 'お前実は河童やろ', model: '夏になると急に水辺から離れたがらなくなる' },
+    { text: 'あんた絶対河童やろ', model: '頭のてっぺんだけ天然パーマが皿みたいに丸い' },
+    { text: 'お前ほんまは河童と違うか', model: 'きゅうりを見ると露骨にテンションが上がる' },
+    { text: 'なんでお前そんな河童っぽいんや', model: 'プールの授業だけ異常に活き活きしている' },
+    { text: 'お前、水辺で正体出すぎやろ', model: '帽子を取った瞬間に周りが一瞬固まる' },
+    { text: 'その水泳の腕前、河童やろ', model: '平泳ぎのタイムが競泳選手並みにおかしい' },
+    { text: 'お前実は川の主やろ', model: '地元の用水路の水位を毎回正確に言い当てる' },
+    { text: 'お前、河童にしては陸で生きづらそうやろ', model: '梅雨明けと同時に元気がなくなる' },
+    { text: 'お前実は隠居中の河童やろ', model: '皿に霧吹きで水をかけるのが日課になっている' },
+    { text: 'お前、河童バレバレやぞ', model: '相撲を取らせると誰にも負けたことがない' },
+
+    { text: 'お前実は人魚やろ', model: 'お風呂の時間が異常に長い' },
+    { text: 'あんた絶対人魚やろ', model: 'プールに入ると足がもつれるふりが下手すぎる' },
+    { text: 'お前ほんまは人魚と違うか', model: '魚料理の日だけ箸が進まない' },
+    { text: 'なんでお前そんな人魚っぽいんや', model: '声だけでカラオケの点数が毎回満点近い' },
+    { text: 'お前、うろこ隠しきれてへんぞ', model: '足のサイズが日によって微妙に違うと噂されている' },
+    { text: 'その泳ぎ、人魚やろ', model: '海に入った瞬間だけ表情が生き生きする' },
+    { text: 'お前実は伝説の人魚姫やろ', model: '声を失った時期がある割に今めちゃくちゃ喋る' },
+    { text: 'お前、人魚にしては塩に弱すぎるやろ', model: '温泉に入ると謎に長湯を避ける' },
+    { text: 'お前実は深海出身やろ', model: '水圧の変化に異常に敏感で気圧予報士より当たる' },
+    { text: 'お前、人魚バレバレやぞ', model: 'うろこみたいなラメのネイルを見て店員が二度見した' },
+
+    { text: 'お前実は座敷童子やろ', model: 'お前が来てから急に家の運気が良くなったと言われる' },
+    { text: 'あんた絶対座敷童子やろ', model: '気配を消すのが得意すぎて誰も入室に気づかない' },
+    { text: 'お前ほんまは座敷童子と違うか', model: '引っ越しのたびにその家の福が増える' },
+    { text: 'なんでお前そんな座敷童子っぽいんや', model: '廊下を走る足音だけ聞こえて姿が見えないことがある' },
+    { text: 'お前、座敷童子隠しきれてへんぞ', model: 'お団子頭で正座しているとみんな拝みたくなる' },
+    { text: 'その福運、座敷童子やろ', model: 'お前がいる部署だけ毎回ボーナスが増える' },
+    { text: 'お前実は古い旅館出身やろ', model: '実家の住所が創業三百年の看板に書いてある' },
+    { text: 'お前、座敷童子にしてはよく喋りすぎるやろ', model: '幼く見えるのに商談の交渉力がやたら強い' },
+    { text: 'お前実は引っ越し先を選んでる座敷童子やろ', model: '家を出て行くと言った途端に周りが本気で引き止める' },
+    { text: 'お前、座敷童子バレバレやぞ', model: '誰もいないはずの和室から笑い声が聞こえたと言われる' },
+
+    { text: 'お前実は賞金稼ぎやろ', model: '財布の中に指名手配のポスターが何枚も入っている' },
+    { text: 'あんた絶対賞金稼ぎやろ', model: '忘れ物を届けるだけで謎に報酬を要求する' },
+    { text: 'お前ほんまは賞金稼ぎと違うか', model: '人探しの手際が探偵より速い' },
+    { text: 'なんでお前そんな賞金稼ぎっぽいんや', model: '待ち合わせの相手を見つける嗅覚が異常に鋭い' },
+    { text: 'お前、賞金稼ぎ隠しきれてへんぞ', model: '名刺に「捕獲率100%」と書きそうになった' },
+    { text: 'その追跡力、賞金稼ぎやろ', model: 'なくしたスマホの場所を秒で言い当てる' },
+    { text: 'お前実は伝説の賞金稼ぎやろ', model: '退職した会社の噂が今も裏社会に流れている' },
+    { text: 'お前、賞金稼ぎにしては情に厚すぎるやろ', model: 'ターゲットのはずの相手にご飯をおごってしまう' },
+    { text: 'お前実は賞金稼ぎ引退組やろ', model: '昔の武勇伝を聞かれると急に口が重くなる' },
+    { text: 'お前、賞金稼ぎバレバレやぞ', model: '依頼人からの電話にだけ声のトーンが変わる' }
   ];
 
   // ----- ランク別の設定(ダメージ量・AI不使用時のフォールバック用コメント/セリフ、関西弁) -----
   var RANK_TABLE = {
-    A: { damage: 400 },
-    B: { damage: 250 },
-    C: { damage: 100 },
+    A: { damage: 270 },
+    B: { damage: 170 },
+    C: { damage: 70 },
     D: { damage: 0 }
   };
 
@@ -3148,12 +3365,23 @@ html, body {
   });
 
   // ----- 初期表示 -----
-  currentOdai = ODAI_LIST[0];
   heroEl.style.backgroundImage = 'url("' + HERO_IMAGES.normal + '")';
   updateHpDisplay();
   updatePlayerHpDisplay();
   updateStrikeDisplay();
-  startTimer();
+
+  // ----- ルール説明画面 -----
+  // 「スタート」ボタンを押すまでお題抽選・タイマー開始を行わない。
+  // (以前はODAI_LIST[0]を直接表示しており、初回だけ必ず同じ問題になっていたため、
+  //  他の問題と同じくシャッフルキュー経由のnextOdai()を使うよう修正)
+  var rulesOverlay = document.getElementById('rulesOverlay');
+  var rulesStartBtn = document.getElementById('rulesStartBtn');
+  rulesStartBtn.addEventListener('click', function () {
+    SFX.click();
+    rulesOverlay.hidden = true;
+    setOdai(nextOdai());
+    startTimer();
+  });
 })();
 </script>
 </body>
