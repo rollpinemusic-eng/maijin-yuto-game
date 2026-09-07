@@ -19,6 +19,58 @@
 //    「複数のBGMが同時に鳴る」「音量が不安定になる」を根絶する。
 // 5. <audio>要素・MediaSession APIは一切使用しない
 //    (iPhoneのロック画面/コントロールセンターにメディア操作を出さないため)。
+// 6. iOS Safari向けの追加対策(navigator.audioSession / getUserMedia観測)。
+//    WebKitはマイク取得(getUserMedia)時にOSの音声セッションを
+//    「録音優先」に切り替えることがあり、これがページ全体の再生音量に
+//    影響する既知の挙動が報告されている。BGM側のgain値自体は一切変更
+//    しない前提のまま、可能な範囲でOSに「このページは再生を優先したい」
+//    と伝える対策を下記に実装している。
+//    ・navigator.audioSession(Safari 17+の実験的API)が使えれば、
+//      再生開始時とマイク終了直後に type='playback' を宣言し直す。
+//    ・音声入力機能(SpeechRecognition等)の実装コードには一切触れず、
+//      navigator.mediaDevices.getUserMediaをラップして「マイクが
+//      使われた/終わった」ことを外側から観測するだけに留めている
+//      (引数・返り値・処理内容は完全に元のまま素通しする)。
+//    ・ただし、ブラウザによってはSpeechRecognitionが本APIを経由せず
+//      内部で完結する場合があり、その場合はこの観測自体が発火しない。
+//      これはWeb側からは検知・制御ができない領域であるため、正直に
+//      制約として明記する。
+(function (global) {
+  function applyPlaybackAudioSession() {
+    try {
+      if (navigator.audioSession && 'type' in navigator.audioSession) {
+        navigator.audioSession.type = 'playback';
+      }
+    } catch (e) {}
+  }
+
+  (function watchMicUsage() {
+    try {
+      var md = navigator.mediaDevices;
+      if (!md || typeof md.getUserMedia !== 'function') return;
+      var original = md.getUserMedia.bind(md);
+      md.getUserMedia = function (constraints) {
+        // 引数はそのまま元の実装に渡す(音声処理設定などは一切変更しない)
+        return original(constraints).then(function (stream) {
+          try {
+            var audioTracks = stream.getAudioTracks ? stream.getAudioTracks() : [];
+            audioTracks.forEach(function (track) {
+              track.addEventListener('ended', function () {
+                // マイクが終了した直後、再生優先のセッションへ戻すことを試みる
+                applyPlaybackAudioSession();
+              });
+            });
+          } catch (e) {}
+          return stream;
+        });
+      };
+    } catch (e) {}
+  })();
+
+  global.__majinApplyPlaybackAudioSession = applyPlaybackAudioSession;
+  applyPlaybackAudioSession(); // ページ読み込み時点でも一度宣言しておく
+})(window);
+
 (function (global) {
   // ----- 音量表(唯一の音量設定箇所。外部からはここを直接変更できない) -----
   // 各トラックの音量は、実測したRMS音量をもとに「ステージ2(仏音)を基準に
@@ -94,6 +146,7 @@
       sourceNode.connect(gainNode);
       sourceNode.start(0);
       isPlaying = true;
+      if (global.__majinApplyPlaybackAudioSession) global.__majinApplyPlaybackAudioSession();
     }
 
     // 「音源の読み込み完了」と「ユーザー操作による解錠」は非同期に起こるため、
