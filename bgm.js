@@ -1,76 +1,33 @@
-// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v6)
+// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v8)
 //
-// ===== 設計方針(今回の全面見直しのポイント) =====
+// ===== 設計方針 =====
 // 1. 音量は「呼び出し側が数値を渡す」のではなく、この中の1つの表
 //    (TRACKS)だけが持つ。各ページはトラック名(キー)を指定するだけで、
 //    音量の値そのものを外部から渡す・書き換える手段を用意しない。
-//    → 「画面ごとに音量がバラバラになる」「他の処理からvolumeが
-//       上書きされる」を構造的に起こり得なくしている。
 // 2. マイク(音声入力)は別のAudioContextを使う既存の仕組みであり、
 //    このモジュールは一切関知しない。BGM側のgain値は生成時に一度だけ
-//    設定し、以後どのイベント(操作・画面復帰・エラー等)が起きても
-//    絶対に書き換えない。これによりマイク使用前後でBGM音量が
-//    変わることをこのモジュール側からは起こり得ないようにしている。
+//    設定し、以後どのイベントが起きても絶対に書き換えない。
 // 3. 1ページ=1つのAudioContext=1つの音源、を厳守。同一ページ内で
 //    init()が複数回呼ばれても2つ目以降は無視する(二重再生防止)。
-// 4. ページを離れる瞬間(pagehide/beforeunload)に必ずAudioContextを
-//    完全に閉じる。ブラウザのbfcacheで古いページの状態が保持された
-//    まま復元されても、閉じたcontextは二度と音を出せないため、
-//    「複数のBGMが同時に鳴る」「音量が不安定になる」を根絶する。
-// 5. <audio>要素・MediaSession APIは一切使用しない
-//    (iPhoneのロック画面/コントロールセンターにメディア操作を出さないため)。
-// 6. iOS Safari向けの追加対策(navigator.audioSession / getUserMedia観測)。
-//    WebKitはマイク取得(getUserMedia)時にOSの音声セッションを
-//    「録音優先」に切り替えることがあり、これがページ全体の再生音量に
-//    影響する既知の挙動が報告されている。BGM側のgain値自体は一切変更
-//    しない前提のまま、可能な範囲でOSに「このページは再生を優先したい」
-//    と伝える対策を下記に実装している。
-//    ・navigator.audioSession(Safari 17+の実験的API)が使えれば、
-//      再生開始時とマイク終了直後に type='playback' を宣言し直す。
-//    ・音声入力機能(SpeechRecognition等)の実装コードには一切触れず、
-//      navigator.mediaDevices.getUserMediaをラップして「マイクが
-//      使われた/終わった」ことを外側から観測するだけに留めている
-//      (引数・返り値・処理内容は完全に元のまま素通しする)。
-//    ・ただし、ブラウザによってはSpeechRecognitionが本APIを経由せず
-//      内部で完結する場合があり、その場合はこの観測自体が発火しない。
-//      これはWeb側からは検知・制御ができない領域であるため、正直に
-//      制約として明記する。
-(function (global) {
-  function applyPlaybackAudioSession() {
-    try {
-      if (navigator.audioSession && 'type' in navigator.audioSession) {
-        navigator.audioSession.type = 'playback';
-      }
-    } catch (e) {}
-  }
-
-  (function watchMicUsage() {
-    try {
-      var md = navigator.mediaDevices;
-      if (!md || typeof md.getUserMedia !== 'function') return;
-      var original = md.getUserMedia.bind(md);
-      md.getUserMedia = function (constraints) {
-        // 引数はそのまま元の実装に渡す(音声処理設定などは一切変更しない)
-        return original(constraints).then(function (stream) {
-          try {
-            var audioTracks = stream.getAudioTracks ? stream.getAudioTracks() : [];
-            audioTracks.forEach(function (track) {
-              track.addEventListener('ended', function () {
-                // マイクが終了した直後、再生優先のセッションへ戻すことを試みる
-                applyPlaybackAudioSession();
-              });
-            });
-          } catch (e) {}
-          return stream;
-        });
-      };
-    } catch (e) {}
-  })();
-
-  global.__majinApplyPlaybackAudioSession = applyPlaybackAudioSession;
-  applyPlaybackAudioSession(); // ページ読み込み時点でも一度宣言しておく
-})(window);
-
+// 4. ページが見えなくなった瞬間(visibilitychange)に必ず一時停止し、
+//    ページを離れる瞬間(pagehide/beforeunload)に必ずAudioContextを
+//    完全に閉じる。BGMは「ゲーム画面が表示されている間だけ」再生し、
+//    タブ・アプリを閉じれば確実に止まる。
+// 5. <audio>要素・MediaSession API・navigator.audioSessionは
+//    一切使用しない。
+//    【重要な経緯】以前のバージョンで navigator.audioSession.type
+//    = 'playback' を設定する対策を一時的に追加したが、これはiOSに
+//    「バックグラウンド再生を行う音楽アプリ相当のセッション」と
+//    認識させてしまい、その結果、
+//    ・ページ/Safari/タブを閉じてもBGMが鳴り続ける
+//    ・iPhoneのコントロールセンターに曲名・再生/停止/スキップ操作が
+//      表示される
+//    ・コントロールセンターから停止しても止まらない
+//    という重大な不具合を実機で引き起こしたため、完全に撤去した。
+//    (ネイティブアプリのAVAudioSessionCategoryPlaybackと同じ効果を
+//    持つAPIで、バックグラウンド再生を明示的に許可する意味を持つ
+//    ため、ゲーム内だけの音声にしたい今回の要件とは根本的に相容れない)。
+//    マイク使用後の音量低下対策としてこのAPIを使うことは今後も行わない。
 (function (global) {
   // ----- 音量表(唯一の音量設定箇所。外部からはここを直接変更できない) -----
   // 各トラックの音量は、実測したRMS音量をもとに「ステージ2(仏音)を基準に
@@ -95,7 +52,7 @@
     var track = TRACKS[trackKey];
     if (!track) return null; // 未知のキーは何もしない(誤操作で無音量再生を防ぐ)
 
-    var vol = track.volume; // ここで確定させた後は二度と読み direct変更しない
+    var vol = track.volume; // ここで確定させた後は二度と書き換えない
     var trackUrl = (basePath || '') + track.url;
 
     var ctx = null;
@@ -123,15 +80,15 @@
               if (closed) return;
               // 通話・Siri・マイク使用等でOSがcontextを一時停止させることがある
               // (WebKit独自の'interrupted'状態を含む)。音量には触れず、
-              // 再生状態(running/suspended)だけを元に戻す。
-              if (hasGesture && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
+              // ページが表示中の場合に限って再生状態だけを元に戻す。
+              if (hasGesture && !document.hidden && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
                 ctx.resume().catch(function () {});
               }
             });
           } catch (e) {}
         }
       }
-      if (ctx && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
+      if (ctx && !document.hidden && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
         ctx.resume().catch(function () {});
       }
       return ctx;
@@ -146,16 +103,29 @@
       sourceNode.connect(gainNode);
       sourceNode.start(0);
       isPlaying = true;
-      if (global.__majinApplyPlaybackAudioSession) global.__majinApplyPlaybackAudioSession();
     }
 
     // 「音源の読み込み完了」と「ユーザー操作による解錠」は非同期に起こるため、
     // どちらが先に揃っても取りこぼさないよう、この関数を両方の完了地点から呼ぶ
     function maybeStart() {
-      if (closed || isPlaying || !buffer || !hasGesture) return;
+      if (closed || isPlaying || !buffer || !hasGesture || document.hidden) return;
       startPlayback();
     }
 
+    // ----- ページが見えなくなった瞬間、即座に一時停止する -----
+    // (タブ切り替え・アプリ切り替え・画面ロック等。「ゲーム画面が
+    //  表示されている間だけ再生する」を、unloadイベント任せにせず
+    //  visibilitychangeでも二重に保証する)
+    document.addEventListener('visibilitychange', function () {
+      if (closed || !ctx) return;
+      if (document.hidden) {
+        if (ctx.state === 'running') ctx.suspend().catch(function () {});
+      } else if (hasGesture && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
+        ctx.resume().catch(function () {});
+      }
+    });
+
+    // ----- ページを完全に離れた場合は、AudioContextごと確実に破棄する -----
     function shutdown() {
       if (closed) return;
       closed = true;
@@ -182,7 +152,7 @@
       .then(function (decoded) {
         if (!decoded || closed) return;
         buffer = decoded;
-        maybeStart(); // 既に操作済みなら、デコード完了と同時に再生開始
+        maybeStart(); // 既に操作済みで表示中なら、デコード完了と同時に再生開始
       })
       .catch(function () { /* 読み込み失敗時は無音のまま(ゲーム進行には影響させない) */ });
 
