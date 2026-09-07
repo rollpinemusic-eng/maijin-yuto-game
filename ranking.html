@@ -271,6 +271,24 @@ html, body {
 </style>
 </head>
 <body>
+<script src="bgm.js"></script>
+<script>
+  // ホーム画面のパネル(iframe)として開かれている場合はホーム側のBGMをそのまま使うため、
+  // このページ自身では別のAudioContextを作らない(単体で開いた場合のみ再生する)
+  if (window.self === window.top) {
+    MajinBGM.init('bgm/common-jiron-tetsugaku.mp3', 0.214);
+  } else {
+    // パネル表示中に「ホームへ戻る」系のリンクが押されたら、ページ遷移(=BGM再起動)
+    // させず、親ページにパネルを閉じるよう伝える
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href="index.html"]');
+      if (a) {
+        e.preventDefault();
+        window.parent.postMessage({ majinClosePanel: true }, '*');
+      }
+    });
+  }
+</script>
 <div class="wrap">
   <a class="back-link" href="index.html">← ホームへ戻る</a>
   <h1 class="page-title brush">ランキング</h1>
@@ -299,10 +317,8 @@ html, body {
   </button>
 </nav>
 
-<script src="bgm.js"></script>
 <script>
 (function () {
-  MajinBGM.init('bgm/common-jiron-tetsugaku.mp3', 0.214);
   var RANKING_API_URL = 'https://maijin-yuto-ranking.rollpinemusic-173.workers.dev';
   var STAGE_NAMES = { 1: 'ステージ1クリア', 2: 'ステージ2クリア', 3: 'ステージ3クリア' };
 
