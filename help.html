@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ゲーム説明 ～笑ろてまうやろ！～</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #0d0616;
+  color: #f3eefc;
+  font-family: "Zen Maru Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.brush { font-family: "Yuji Syuku", "Zen Maru Gothic", serif; }
+
+.wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px 78px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #b98cff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  margin-bottom: 10px;
+}
+
+.page-title {
+  margin: 4px 0 2px;
+  font-size: 26px;
+  font-weight: 900;
+  background: linear-gradient(180deg, #fff3b0 0%, #ffd700 55%, #b8860b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 18px rgba(255, 215, 0, 0.35);
+}
+
+.page-subtitle {
+  margin: 0 0 20px;
+  font-size: 12.5px;
+  color: #cdbdea;
+}
+
+.section {
+  background: linear-gradient(180deg, #1a0f2e 0%, #140a24 100%);
+  border: 1px solid #4a2f7a;
+  border-radius: 16px;
+  padding: 16px 16px 18px;
+  margin-bottom: 14px;
+  box-shadow: inset 0 0 0 1px rgba(168, 130, 255, 0.1);
+}
+
+.section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+  font-size: 15px;
+  margin-right: 8px;
+  vertical-align: middle;
+  box-shadow: 0 2px 8px rgba(109, 40, 217, 0.5);
+}
+
+.section-title {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.section p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #e9d5ff;
+}
+.section p:last-child { margin-bottom: 0; }
+
+.stage-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stage-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(185, 140, 255, 0.25);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.stage-mini-num {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ff2d95, #b8005f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.stage-mini-body { min-width: 0; }
+.stage-mini-name { margin: 0; font-size: 13.5px; font-weight: 900; color: #fff; }
+.stage-mini-desc { margin: 1px 0 0; font-size: 11.5px; color: #cbb9ec; }
+
+.judge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.judge-card {
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  border: 1px solid;
+}
+.judge-card .jc-rank { font-size: 22px; font-weight: 900; font-family: "Yuji Syuku", serif; line-height: 1; }
+.judge-card .jc-desc { margin-top: 4px; font-size: 11px; line-height: 1.5; color: #e9d5ff; }
+
+.judge-card.rank-A { border-color: #ffd700; background: rgba(255, 215, 0, 0.08); }
+.judge-card.rank-A .jc-rank { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+.judge-card.rank-B { border-color: #7dd3fc; background: rgba(125, 211, 252, 0.08); }
+.judge-card.rank-B .jc-rank { color: #7dd3fc; text-shadow: 0 0 10px rgba(125,211,252,0.5); }
+.judge-card.rank-C { border-color: #ffb199; background: rgba(255, 177, 153, 0.08); }
+.judge-card.rank-C .jc-rank { color: #ffb199; }
+.judge-card.rank-D { border-color: #6b5a8a; background: rgba(154, 138, 184, 0.08); }
+.judge-card.rank-D .jc-rank { color: #9a8ab8; }
+
+.rank-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 7px 10px;
+  border: 1px solid;
+}
+
+.rank-row .rr-badge {
+  flex-shrink: 0;
+  min-width: 44px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 900;
+  font-family: "Yuji Syuku", serif;
+}
+
+.rank-row .rr-body { flex: 1; min-width: 0; }
+.rank-row .rr-name { font-size: 12.5px; font-weight: 900; color: #fff; }
+.rank-row .rr-score { font-size: 10.5px; color: #b9a8d9; font-variant-numeric: tabular-nums; }
+
+.rank-row.tier-d { border-color: #6b5a8a; background: rgba(154,138,184,0.06); }
+.rank-row.tier-d .rr-badge { color: #9a8ab8; }
+.rank-row.tier-c { border-color: #8f7ac9; background: rgba(143,122,201,0.08); }
+.rank-row.tier-c .rr-badge { color: #cbb8ee; }
+.rank-row.tier-b { border-color: #4fa6e0; background: rgba(79,166,224,0.08); }
+.rank-row.tier-b .rr-badge { color: #7dd3fc; }
+.rank-row.tier-a { border-color: #4fa6e0; background: rgba(79,166,224,0.12); }
+.rank-row.tier-a .rr-badge { color: #63b8f5; }
+.rank-row.tier-s { border-color: #ffd700; background: rgba(255,215,0,0.08); }
+.rank-row.tier-s .rr-badge { color: #ffd700; }
+.rank-row.tier-ss { border-color: #ffe27a; background: rgba(255,215,0,0.14); }
+.rank-row.tier-ss .rr-badge { color: #ffe27a; }
+.rank-row.tier-sss { border-color: #fff3b0; background: rgba(255,215,0,0.22); }
+.rank-row.tier-sss .rr-badge { color: #fff3b0; text-shadow: 0 0 10px rgba(255,215,0,0.7); }
+.rank-row.tier-sss .rr-name { color: #fff7dd; }
+
+.tip-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #ffe9a8;
+}
+
+.close-btn {
+  display: block;
+  width: 100%;
+  border: 1px solid #b98cff;
+  border-radius: 999px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff;
+  background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #150c26;
+  border-top: 1px solid #4a2f7a;
+  z-index: 5;
+}
+.nav-item {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 8px 4px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: #7a6a9a;
+  font-family: inherit;
+  text-decoration: none;
+}
+.nav-icon { font-size: 16px; line-height: 1; }
+.nav-item.active {
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+}
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.85)); }
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, #ffd700, #ff6ec7);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+}
+.nav-item.disabled { opacity: 0.4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="index.html">← ホームへ戻る</a>
+  <h1 class="page-title brush">ゲーム説明</h1>
+  <p class="page-subtitle">はじめての方はここを読めばすべて分かります</p>
+
+  <section class="section">
+    <p class="section-title"><span class="section-icon">🎮</span>ゲーム概要</p>
+    <p>魔神が出すお題に、面白い回答で立ち向かう大喜利バトルゲームです。回答が面白いほど魔神に大ダメージを与えられ、HPを0にすればステージクリアです。</p>
+    <p>ステージごとにお題の形式が異なります。3ステージすべてクリアを目指しましょう。</p>
+    <div class="stage-mini-list">
+      <div class="stage-mini">
+        <div class="stage-mini-num">1</div>
+        <div class="stage-mini-body">
+          <p class="stage-mini-name">魔神のケツモチ</p>
+          <p class="stage-mini-desc">一般大喜利:お題に自由な発想で回答する形式</p>
+        </div>
+      </div>
+      <div class="stage-mini">
+        <div class="stage-mini-num">2</div>
+        <div class="stage-mini-body">
+          <p class="stage-mini-name">魔神のペット（妖精）</p>
+          <p class="stage-mini-desc">写真で一言:表示された写真に一言コメントする形式</p>
+        </div>
+      </div>
+      <div class="stage-mini">
+        <div class="stage-mini-num">3</div>
+        <div class="stage-mini-body">
+          <p class="stage-mini-name">魔神ゆうと</p>
+          <p class="stage-mini-desc">ツッコミ連想形式:ツッコミが成立するボケを考える形式(最終ステージ)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="section-title"><span class="section-icon">❤️</span>HPについて</p>
+    <p>魔神には最大1000のHPがあります。あなたが回答するたびに判定が行われ、判定ランクに応じたダメージを魔神に与えられます。HPが0になれば勝利です。</p>
+    <p>逆に、面白くない回答(D判定)が続くと魔神の反撃を受け、あなたのHPが減ってしまいます。あなたのHPが0になるとゲームオーバーです。</p>
+  </section>
+
+  <section class="section">
+    <p class="section-title"><span class="section-icon">⚖️</span>判定について</p>
+    <p>あなたの回答は魔神(AI)によってA〜Dの4段階で判定されます。面白い回答ほど高い判定になり、与えるダメージも大きくなります。</p>
+    <div class="judge-grid">
+      <div class="judge-card rank-A"><div class="jc-rank">A</div><div class="jc-desc">会心の一撃<br>特大ダメージ</div></div>
+      <div class="judge-card rank-B"><div class="jc-rank">B</div><div class="jc-desc">まずまずの回答<br>そこそこダメージ</div></div>
+      <div class="judge-card rank-C"><div class="jc-rank">C</div><div class="jc-desc">手応え薄め<br>ダメージ小</div></div>
+      <div class="judge-card rank-D"><div class="jc-rank">D</div><div class="jc-desc">不発<br>ダメージなし+反撃</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="section-title"><span class="section-icon">🏅</span>ランクについて</p>
+    <p>ステージクリア時、そのプレイ全体のA〜D判定から平均点を算出し、下記のランクで総合評価されます。</p>
+    <div class="rank-table">
+      <div class="rank-row tier-d"><span class="rr-badge">D</span><div class="rr-body"><p class="rr-name">センスなし</p><p class="rr-score">0〜30点</p></div></div>
+      <div class="rank-row tier-c"><span class="rr-badge">C</span><div class="rr-body"><p class="rr-name">凡人</p><p class="rr-score">31〜49点</p></div></div>
+      <div class="rank-row tier-b"><span class="rr-badge">B</span><div class="rr-body"><p class="rr-name">クラスの面白い人</p><p class="rr-score">50〜59点</p></div></div>
+      <div class="rank-row tier-a"><span class="rr-badge">A</span><div class="rr-body"><p class="rr-name">芸人の卵</p><p class="rr-score">60〜69点</p></div></div>
+      <div class="rank-row tier-s"><span class="rr-badge">S</span><div class="rr-body"><p class="rr-name">芸人レベル</p><p class="rr-score">70〜85点</p></div></div>
+      <div class="rank-row tier-ss"><span class="rr-badge">SS</span><div class="rr-body"><p class="rr-name">大御所芸人レベル</p><p class="rr-score">86〜89点</p></div></div>
+      <div class="rank-row tier-sss"><span class="rr-badge">SSS</span><div class="rr-body"><p class="rr-name">魔人ゆうとレベル</p><p class="rr-score">90点以上 かつ A判定率85%以上</p></div></div>
+    </div>
+    <div class="tip-box">💡 SSSクラスだけは平均点だけでなく「A判定の割合」も重視されます。安定して面白い回答を出し続けることが鍵です。</div>
+  </section>
+
+  <section class="section">
+    <p class="section-title"><span class="section-icon">🏆</span>ランキングについて</p>
+    <p>ステージクリア後の結果画面、またはホーム画面からニックネームを登録できます(10文字まで)。</p>
+    <p>ランキングは「過去の自分の最高記録を超えた時だけ」更新されます。前回より低いスコアでは上書きされないので、自己ベストが安心して保存されます。</p>
+    <p>順位は獲得ランクを優先し、同じランク内では平均点の高い順に並びます。</p>
+  </section>
+
+  <a class="close-btn" href="index.html">ホームに戻って遊ぶ</a>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html">
+    <span class="nav-icon">🗡️</span>ステージ
+  </a>
+  <a class="nav-item" href="ranking.html">
+    <span class="nav-icon">🏆</span>ランキング
+  </a>
+  <button class="nav-item disabled" type="button" disabled>
+    <span class="nav-icon">📖</span>図鑑
+  </button>
+  <button class="nav-item disabled" type="button" disabled>
+    <span class="nav-icon">⚙️</span>設定
+  </button>
+</nav>
+
+<script src="bgm.js"></script>
+<script>
+  MajinBGM.init('bgm/common-jiron-tetsugaku.mp3');
+</script>
+</body>
+</html>

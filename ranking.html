@@ -299,8 +299,10 @@ html, body {
   </button>
 </nav>
 
+<script src="bgm.js"></script>
 <script>
 (function () {
+  MajinBGM.init('bgm/common-jiron-tetsugaku.mp3');
   var RANKING_API_URL = 'https://maijin-yuto-ranking.rollpinemusic-173.workers.dev';
   var STAGE_NAMES = { 1: 'ステージ1クリア', 2: 'ステージ2クリア', 3: 'ステージ3クリア' };
 
