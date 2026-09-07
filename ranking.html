@@ -236,6 +236,7 @@ html, body {
   z-index: 5;
 }
 .nav-item {
+  position: relative;
   border: none;
   background: none;
   padding: 8px 4px 10px;
@@ -249,8 +250,23 @@ html, body {
   text-decoration: none;
 }
 .nav-icon { font-size: 16px; line-height: 1; }
-.nav-item.active { color: #d9c6ff; }
-.nav-item.active .nav-icon { filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.7)); }
+.nav-item.active {
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+}
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.85)); }
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, #ffd700, #ff6ec7);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+}
 .nav-item.disabled { opacity: 0.4; }
 </style>
 </head>
