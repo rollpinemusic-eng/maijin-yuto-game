@@ -454,9 +454,9 @@
   <a class="nav-item" id="rankingNavBtn" href="ranking.html">
     <span class="nav-icon">🏆</span>ランキング
   </a>
-  <button class="nav-item disabled" type="button" disabled>
+  <a class="nav-item" id="zukanNavBtn" href="zukan.html">
     <span class="nav-icon">📖</span>図鑑
-  </button>
+  </a>
   <button class="nav-item disabled" type="button" disabled>
     <span class="nav-icon">⚙️</span>設定
   </button>
@@ -490,6 +490,10 @@
   document.getElementById('helpFab').addEventListener('click', function (e) {
     e.preventDefault();
     openPanel('help.html');
+  });
+  document.getElementById('zukanNavBtn').addEventListener('click', function (e) {
+    e.preventDefault();
+    openPanel('zukan.html');
   });
   // パネル(iframe)内で「ホームへ戻る」系のリンクが押されたら、このパネルを閉じる
   window.addEventListener('message', function (e) {

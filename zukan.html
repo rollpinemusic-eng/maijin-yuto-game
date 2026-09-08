@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>図鑑 ～大喜利ダンジョン～</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #0d0616;
+  color: #f3eefc;
+  font-family: "Zen Maru Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.brush {
+  font-family: "Yuji Syuku", "Zen Maru Gothic", serif;
+}
+
+.wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 22px 16px 40px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #b98cff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  margin-bottom: 10px;
+}
+
+.page-title {
+  margin: 4px 0 2px;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.2;
+  background: linear-gradient(180deg, #fff3b0 0%, #ffd700 55%, #b8860b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 18px rgba(255, 215, 0, 0.35);
+}
+
+.page-subtitle {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: #cdbdea;
+}
+
+/* ----- キャラクター選択タブ ----- */
+.zukan-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 12px;
+  margin-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.zukan-tabs::-webkit-scrollbar { display: none; }
+
+.zukan-tab {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 76px;
+  padding: 8px 4px 9px;
+  border: 1px solid #4a2f7a;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1a0f2e 0%, #140a24 100%);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.zukan-tab-thumb-frame {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #4a2f7a;
+  background: #0d0616;
+}
+.zukan-tab-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 20%;
+  display: block;
+  filter: grayscale(0.55) brightness(0.75);
+}
+.zukan-tab-name {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 900;
+  color: #9d8bc0;
+  line-height: 1.25;
+  text-align: center;
+}
+.zukan-tab.active {
+  border-color: #ffd700;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.35);
+}
+.zukan-tab.active .zukan-tab-thumb-frame {
+  border-color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+.zukan-tab.active .zukan-tab-thumb {
+  filter: none;
+}
+.zukan-tab.active .zukan-tab-name { color: #ffd700; }
+
+/* ----- 図鑑カード本体 ----- */
+.zukan-card {
+  border: 1px solid #ffd700;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #241534 0%, #1a0f2e 60%, #140a24 100%);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.16), inset 0 0 0 1px rgba(255, 215, 0, 0.08);
+}
+
+.zukan-image-frame {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-bottom: 1px solid #ffd700;
+  background: #05030a;
+}
+.zukan-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 18%;
+  display: block;
+}
+.zukan-image-frame::after {
+  /* 図鑑らしいスキャンライン演出 */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.09) 3px
+  );
+  pointer-events: none;
+}
+.zukan-image-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(13, 6, 22, 0) 55%, rgba(13, 6, 22, 0.85) 100%);
+  pointer-events: none;
+}
+.zukan-no {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #0d0616;
+  background: linear-gradient(180deg, #fff3b0, #ffd700);
+  padding: 4px 10px;
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+.zukan-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffd700;
+  opacity: 0.85;
+  z-index: 2;
+}
+.zukan-corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+.zukan-corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+.zukan-corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+.zukan-info {
+  padding: 16px 16px 18px;
+}
+.zukan-name {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.3;
+}
+.zukan-subtitle {
+  display: inline-block;
+  margin: 6px 0 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  border-radius: 999px;
+  padding: 3px 11px;
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.zukan-desc-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #b98cff;
+}
+
+.zukan-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.zukan-desc p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: #e6def7;
+}
+.zukan-quote {
+  margin: 2px 0;
+  padding: 10px 14px;
+  border-left: 3px solid #ff6ec7;
+  border-radius: 4px 10px 10px 4px;
+  background: rgba(255, 110, 199, 0.09);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffd9ee;
+  line-height: 1.7;
+}
+.zukan-quote::before { content: '「'; }
+.zukan-quote::after { content: '」'; }
+
+.wrap { padding-bottom: 78px; } /* 下部メニュー分の余白 */
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #150c26;
+  border-top: 1px solid #4a2f7a;
+  z-index: 5;
+}
+.nav-item {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 8px 4px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: #7a6a9a;
+  font-family: inherit;
+  text-decoration: none;
+}
+.nav-icon { font-size: 16px; line-height: 1; }
+.nav-item.active {
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+}
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.85)); }
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, #ffd700, #ff6ec7);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+}
+.nav-item.disabled { opacity: 0.4; }
+</style>
+<link rel="preload" as="fetch" href="bgm/common-jiron-tetsugaku.m4a" crossorigin>
+</head>
+<body>
+<script src="bgm.js?v=15"></script>
+<script>
+  // ホーム画面のパネル(iframe)として開かれている場合はホーム側のBGMをそのまま使うため、
+  // このページ自身では別のAudioContextを作らない(単体で開いた場合のみ再生する)
+  if (window.self === window.top) {
+    MajinBGM.init('common', '');
+  } else {
+    // パネル表示中に「ホームへ戻る」系のリンクが押されたら、ページ遷移(=BGM再起動)
+    // させず、親ページにパネルを閉じるよう伝える
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href="index.html"]');
+      if (a) {
+        e.preventDefault();
+        window.parent.postMessage({ majinClosePanel: true }, '*');
+      }
+    });
+  }
+</script>
+<div class="wrap">
+  <a class="back-link" href="index.html">← ホームへ戻る</a>
+  <h1 class="page-title brush">図鑑</h1>
+  <p class="page-subtitle">魔界に生きる者たちの記録</p>
+
+  <div class="zukan-tabs" id="zukanTabs"></div>
+
+  <div class="zukan-card">
+    <div class="zukan-image-frame">
+      <span class="zukan-no" id="zukanNo">No.001</span>
+      <span class="zukan-corner tr"></span>
+      <span class="zukan-corner bl"></span>
+      <span class="zukan-corner br"></span>
+      <img class="zukan-image" id="zukanImage" src="" alt="">
+    </div>
+    <div class="zukan-info">
+      <p class="zukan-name brush" id="zukanName"></p>
+      <span class="zukan-subtitle" id="zukanSubtitle"></span>
+      <p class="zukan-desc-label">プロフィール</p>
+      <div class="zukan-desc" id="zukanDesc"></div>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html">
+    <span class="nav-icon">🗡️</span>ステージ
+  </a>
+  <a class="nav-item" href="ranking.html">
+    <span class="nav-icon">🏆</span>ランキング
+  </a>
+  <button class="nav-item active" type="button">
+    <span class="nav-icon">📖</span>図鑑
+  </button>
+  <button class="nav-item disabled" type="button" disabled>
+    <span class="nav-icon">⚙️</span>設定
+  </button>
+</nav>
+
+<script>
+(function () {
+  // ----- 図鑑キャラクターデータ -----
+  // 新しいキャラクターを追加する場合は、この配列に1件追加するだけでよい。
+  // id: 一意なキー / no: 図鑑番号(表示用の3桁文字列) / name: 名前 / subtitle: 肩書き
+  // img: 画像パス(zukan/img/ 以下に配置) / desc: プロフィール文章の配列
+  //   { text: '通常の説明文' } または { quote: 'セリフ' } のどちらかを並べる
+  var ZUKAN_DATA = [
+    {
+      id: 'ketsumochi',
+      no: '001',
+      name: '魔神のケツモチ',
+      subtitle: 'リス組 若頭',
+      img: 'zukan/img/char1-ketsumochi.jpg',
+      desc: [
+        { text: '魔界の反社会組織「リス組」の若頭。前科15犯の経歴を持つ、魔神よりも極悪人。' },
+        { text: '過去にお笑い養成所の経営をシノギにしていたため、お笑いには詳しい。' },
+        { text: '現在は、魔神が魔界で経営しているスナック「みゆき」とキャバクラ「堕天使ちゃん」のケツモチとして雇われているが、トラブル時に連絡すると――' },
+        { quote: '今、家の水道もれで業者待っとるから行かれへん' },
+        { quote: '今、代車やで事故ったらこわいから行かれへん' },
+        { text: 'など、何かしらの理由をつけ、仕事を果たしたことは一度もない。' }
+      ]
+    },
+    {
+      id: 'pet',
+      no: '002',
+      name: '魔神のペット（妖精）',
+      subtitle: '自称・妖精(正体は火星人)',
+      img: 'zukan/img/char2-pet.jpg',
+      desc: [
+        { text: '実は火星人。UFO運転中にガソリンスタンドを探していたが、結局ガス欠で魔界へ墜落。' },
+        { text: 'その後意識を失い、目覚めると記憶が変わっており――' },
+        { quote: 'ワシは妖精や！ティンカーベルに連絡せえ！' },
+        { text: 'と主張するようになる。その後、魔神に引き取られ同棲生活を開始。' },
+        { text: '3ヶ月前から魔神が経営するキャバクラ「堕天使ちゃん」に勤務している。源氏名は「まひる」。' },
+        { text: '太客はデーモン○暮。毎回まひるを指名し、ブランド物の豚の臓器や一点物の呪物などをプレゼントしている。' },
+        { text: 'しかし、まひる曰く――' },
+        { quote: '顔が白すぎて無理' },
+        { text: 'とのこと。' }
+      ]
+    },
+    {
+      id: 'majin',
+      no: '003',
+      name: '魔神',
+      subtitle: '魔界の支配者',
+      img: 'zukan/img/char3-majin.jpg',
+      desc: [
+        { text: '魔界を支配する最強の権力者。若い頃は「えだまめ戦車」というコンビで芸人を目指していた。' },
+        { text: 'しかし軌道に乗り始めた頃に相方の女性問題で干され、コンビは解散。' },
+        { text: 'ヤケになった魔神は全財産を株に投入。これが大当たりする。さらに魔界版スマホとなる通話機器を開発し、これも大ヒット。' },
+        { text: '莫大な資産を得た後、金の力で現在の地位を獲得した。' },
+        { text: '現在の魔界では「お笑いレベルが高いほど収入が上がる」という制度を導入。' },
+        { text: 'その結果、おもしろい奴は金持ち、おもしろくない奴は貧乏という極端な格差社会が誕生した。その影響で魔界では毎日のように暴動が起きている。' },
+        { text: 'なお、地球へお忍びで来る際は、必ずルミネへ立ち寄っている。' }
+      ]
+    }
+  ];
+
+  var tabsEl = document.getElementById('zukanTabs');
+  var imageEl = document.getElementById('zukanImage');
+  var noEl = document.getElementById('zukanNo');
+  var nameEl = document.getElementById('zukanName');
+  var subtitleEl = document.getElementById('zukanSubtitle');
+  var descEl = document.getElementById('zukanDesc');
+
+  function renderDesc(desc) {
+    descEl.innerHTML = desc.map(function (block) {
+      if (block.quote) {
+        return '<p class="zukan-quote">' + escapeHtml(block.quote) + '</p>';
+      }
+      return '<p>' + escapeHtml(block.text) + '</p>';
+    }).join('');
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function selectCharacter(id) {
+    var data = ZUKAN_DATA.filter(function (c) { return c.id === id; })[0] || ZUKAN_DATA[0];
+    imageEl.src = data.img;
+    imageEl.alt = data.name;
+    noEl.textContent = 'No.' + data.no;
+    nameEl.textContent = data.name;
+    subtitleEl.textContent = data.subtitle;
+    renderDesc(data.desc);
+
+    var tabs = tabsEl.querySelectorAll('.zukan-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('active', tabs[i].getAttribute('data-id') === data.id);
+    }
+  }
+
+  function buildTabs() {
+    tabsEl.innerHTML = ZUKAN_DATA.map(function (c) {
+      return '' +
+        '<button class="zukan-tab" type="button" data-id="' + c.id + '">' +
+        '  <span class="zukan-tab-thumb-frame"><img class="zukan-tab-thumb" src="' + c.img + '" alt=""></span>' +
+        '  <p class="zukan-tab-name">' + escapeHtml(c.name) + '</p>' +
+        '</button>';
+    }).join('');
+
+    var tabs = tabsEl.querySelectorAll('.zukan-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].addEventListener('click', function (e) {
+        selectCharacter(e.currentTarget.getAttribute('data-id'));
+      });
+    }
+  }
+
+  buildTabs();
+  selectCharacter(ZUKAN_DATA[0].id);
+})();
+</script>
+</body>
+</html>
