@@ -1,4 +1,17 @@
-// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v11)
+// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v12)
+//
+// ===== v12での確定した修正(診断ログで実機から取得した実測値に基づく) =====
+// 実機の診断ログにより、AudioContextが 'suspended' から
+// 'interrupted'(WebKit独自の状態)へ遷移し、以後ずっとその状態のまま
+// 一度も 'running' に戻らないケースを確認した。旧バージョンは
+// resumeを試みる条件が「state === 'suspended'」のみだったため、
+// 'interrupted' になった場合は一切resume()を試みておらず、
+// 一度発生すると永久に無音のままになっていた。
+// (実機確認により、本体のサイレントスイッチは着信モードであることを
+//  確認済みのため、ハードウェアスイッチが原因ではないと判断している)
+// → 'interrupted' もresumeの対象に加え、さらにAudioContextの
+//   statechangeイベントを監視して状態が変わるたびに回復を試みるよう
+//   修正した。能動的にctx.suspend()を呼ぶ処理は引き続き一切ない。
 //
 // ===== 診断ログ機能について =====
 // URLの末尾に ?bgmdebug=1 を付けて開くと、画面上部に半透明のログが
@@ -92,6 +105,21 @@
     var hasGesture = false; // ユーザー操作(タップ等)が一度でもあったか
     var closed = false;     // ページを本当に離れて終了したか(以後は何もしない)
 
+    // resumeを試みる。'suspended'だけでなく、WebKit独自の'interrupted'
+    // 状態(実機ログで確認済み:電話・Siri・他アプリの音声等との衝突で
+    // 発生し、これまでのバージョンではこの状態からの回復を一切試みて
+    // いなかったため、一度発生すると永久に無音のままになっていた)
+    // からも回復を試みる。
+    function attemptResume() {
+      if (!ctx || closed) return;
+      dlog('resume() 試行 state=' + ctx.state);
+      ctx.resume().then(function () {
+        dlog('resume() 成功後 state=' + ctx.state + ' gain.value=' + (gainNode ? gainNode.gain.value : 'null'));
+      }).catch(function (e) {
+        dlog('resume() 失敗: ' + e);
+      });
+    }
+
     function getCtx() {
       if (closed) return null;
       if (!ctx) {
@@ -107,15 +135,22 @@
           gainNode.connect(ctx.destination);
           dlog('AudioContext生成 state=' + ctx.state + ' sampleRate=' + ctx.sampleRate +
             ' gain.value(設定直後の読み取り)=' + gainNode.gain.value);
+          // stateが変化するたびに監視し、suspended/interruptedになっていたら
+          // (操作済みのページに限り)回復を試みる。ctx.suspend()を能動的に
+          // 呼ぶ処理は一切無く、ここは「回復を試みる」だけの受動的な処理。
+          try {
+            ctx.addEventListener('statechange', function () {
+              if (closed) return;
+              dlog('statechange -> state=' + ctx.state);
+              if (hasGesture && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
+                attemptResume();
+              }
+            });
+          } catch (e) {}
         }
       }
-      if (ctx && ctx.state === 'suspended') {
-        dlog('resume() 試行(state=suspended)');
-        ctx.resume().then(function () {
-          dlog('resume() 成功 -> state=' + ctx.state + ' gain.value=' + (gainNode ? gainNode.gain.value : 'null'));
-        }).catch(function (e) {
-          dlog('resume() 失敗: ' + e);
-        });
+      if (ctx && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
+        attemptResume();
       }
       return ctx;
     }
