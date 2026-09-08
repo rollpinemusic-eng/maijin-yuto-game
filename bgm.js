@@ -1,41 +1,37 @@
-// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v9)
+// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v10)
 //
 // ===== 設計方針 =====
 // 1. 音量は「呼び出し側が数値を渡す」のではなく、この中の1つの表
 //    (TRACKS)だけが持つ。各ページはトラック名(キー)を指定するだけで、
 //    音量の値そのものを外部から渡す・書き換える手段を用意しない。
-// 2. マイク(音声入力)は別のAudioContextを使う既存の仕組みであり、
-//    このモジュールは一切関知しない。BGM側のgain値は生成時に一度だけ
-//    設定し、以後どのイベントが起きても絶対に書き換えない。
-// 3. 1ページ=1つのAudioContext=1つの音源、を厳守。同一ページ内で
+//    このgain値は生成時に一度だけ設定し、以後どのイベントが起きても
+//    絶対に書き換えない(マイク使用・画面遷移・復帰等、一切無関係)。
+// 2. 1ページ=1つのAudioContext=1つの音源、を厳守。同一ページ内で
 //    init()が複数回呼ばれても2つ目以降は無視する(二重再生防止)。
-// 4. ページが見えなくなった瞬間(visibilitychange)に必ず一時停止し、
-//    ページを離れる瞬間(pagehide/beforeunload)に必ずAudioContextを
-//    完全に閉じる。BGMは「ゲーム画面が表示されている間だけ」再生し、
-//    タブ・アプリを閉じれば確実に止まる。
-// 5. <audio>要素・MediaSession API・navigator.audioSessionは
-//    一切使用しない。
-//    【重要な経緯】以前のバージョンで navigator.audioSession.type
-//    = 'playback' を設定する対策を一時的に追加したが、これはiOSに
-//    「バックグラウンド再生を行う音楽アプリ相当のセッション」と
-//    認識させてしまい、その結果、
-//    ・ページ/Safari/タブを閉じてもBGMが鳴り続ける
-//    ・iPhoneのコントロールセンターに曲名・再生/停止/スキップ操作が
-//      表示される
-//    ・コントロールセンターから停止しても止まらない
-//    という重大な不具合を実機で引き起こしたため、完全に撤去した。
-//    (ネイティブアプリのAVAudioSessionCategoryPlaybackと同じ効果を
-//    持つAPIで、バックグラウンド再生を明示的に許可する意味を持つ
-//    ため、ゲーム内だけの音声にしたい今回の要件とは根本的に相容れない)。
-//    マイク使用後の音量低下対策としてこのAPIを使うことは今後も行わない。
+// 3. <audio>要素・MediaSession API・navigator.audioSessionは
+//    一切使用しない(iPhoneのロック画面/コントロールセンターに
+//    メディア操作を出さないため。navigator.audioSessionは過去に
+//    試して重大な副作用があったため使用しない方針を確定させている)。
+// 4. AudioContextの一時停止/再開は、能動的に何度も制御しようとせず
+//    最小限にしている。
+//    【経緯】以前のバージョンでは、タブが非表示になった瞬間に
+//    ctx.suspend()を呼ぶ処理や、bfcache(戻る操作でページの状態が
+//    保持される仕組み)からの復帰時にctx.resume()を明示的に呼ぶ処理を
+//    追加していたが、実機(iPhone Safari)でSafariの「戻る」操作/
+//    スワイプ操作を行った後、BGM音量がゲーム全体で下がったまま
+//    元に戻らなくなる重大な不具合が発生した。これらの能動的な
+//    suspend/resume制御自体がiOS側の音声セッションに何らかの
+//    悪影響を与えていた可能性が高いため、全て撤去した。
+//    → 現在はページを「本当に離れる」場合(bfcacheへの一時退避ではなく
+//      真の終了)にのみAudioContextを閉じる。それ以外の一時停止/再開は
+//      ブラウザ自身の標準動作、および次にユーザーが操作した瞬間に
+//      resume()を試みる既存の仕組み(自動再生制限の解錠処理)に委ねる。
+//      能動的にstateを操作するコードを増やさないことを優先している。
 (function (global) {
   // ----- 音量表(唯一の音量設定箇所。外部からはここを直接変更できない) -----
   // 各トラックの音量は、実測したRMS音量をもとに「ステージ2(仏音)を基準に
-  // 聴感上の音量を揃える」よう正規化した値。この値を書き換えられるのは
-  // このファイルを直接編集する場合のみで、実行時に外部から変更する手段はない。
-  // ファイルはAAC(.m4a, 64kbps)に統一している。元のmp3(64〜128kbps)より
-  // ファイルサイズを大幅に削減し、オープニング/ホーム画面での読み込み
-  // 待ち時間(=BGM再生開始の遅れ)を短縮するため。
+  // 聴感上の音量を揃える」よう正規化した値。ファイルはAAC(.m4a, 64kbps)
+  // に統一し、読み込み待ち時間を短縮している。
   var TRACKS = {
     stage1: { url: 'bgm/stage1-my-precious.m4a', volume: 0.082 },
     stage2: { url: 'bgm/stage2-hotoke-no-ne.m4a', volume: 0.32 },
@@ -64,7 +60,7 @@
     var buffer = null;
     var isPlaying = false;
     var hasGesture = false; // ユーザー操作(タップ等)が一度でもあったか
-    var closed = false;     // ページを離れて完全終了したか(以後は何もしない)
+    var closed = false;     // ページを本当に離れて終了したか(以後は何もしない)
 
     function getCtx() {
       if (closed) return null;
@@ -78,20 +74,11 @@
           gainNode = ctx.createGain();
           gainNode.gain.setValueAtTime(vol, ctx.currentTime); // ここ以外でgainを触るコードは存在しない
           gainNode.connect(ctx.destination);
-          try {
-            ctx.addEventListener('statechange', function () {
-              if (closed) return;
-              // 通話・Siri・マイク使用等でOSがcontextを一時停止させることがある
-              // (WebKit独自の'interrupted'状態を含む)。音量には触れず、
-              // ページが表示中の場合に限って再生状態だけを元に戻す。
-              if (hasGesture && !document.hidden && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
-                ctx.resume().catch(function () {});
-              }
-            });
-          } catch (e) {}
         }
       }
-      if (ctx && !document.hidden && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
+      // 何らかの理由でsuspendされていた場合のみ、ユーザー操作をきっかけに
+      // 再開を試みる(能動的な監視・強制操作はしない)
+      if (ctx && ctx.state === 'suspended') {
         ctx.resume().catch(function () {});
       }
       return ctx;
@@ -111,24 +98,11 @@
     // 「音源の読み込み完了」と「ユーザー操作による解錠」は非同期に起こるため、
     // どちらが先に揃っても取りこぼさないよう、この関数を両方の完了地点から呼ぶ
     function maybeStart() {
-      if (closed || isPlaying || !buffer || !hasGesture || document.hidden) return;
+      if (closed || isPlaying || !buffer || !hasGesture) return;
       startPlayback();
     }
 
-    // ----- ページが見えなくなった瞬間、即座に一時停止する -----
-    // (タブ切り替え・アプリ切り替え・画面ロック等。「ゲーム画面が
-    //  表示されている間だけ再生する」を、unloadイベント任せにせず
-    //  visibilitychangeでも二重に保証する)
-    document.addEventListener('visibilitychange', function () {
-      if (closed || !ctx) return;
-      if (document.hidden) {
-        if (ctx.state === 'running') ctx.suspend().catch(function () {});
-      } else if (hasGesture && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
-        ctx.resume().catch(function () {});
-      }
-    });
-
-    // ----- ページを完全に離れた場合は、AudioContextごと確実に破棄する -----
+    // ----- ページを本当に離れた場合にのみ、AudioContextごと確実に破棄する -----
     // gainを即座に0にしてから閉じる。close()は非同期のため、万一処理の
     // 途中でページが強制終了されても「最後に確定していた音量」がゼロに
     // なるようにする安全策(=閉じきれなくても音が残らない)。
@@ -140,26 +114,14 @@
       try { if (ctx) ctx.close(); } catch (e) {}
     }
 
-    // ----- bfcache(戻る/進む操作でページの状態がそのまま保持される仕組み)対策 -----
     // pagehideは「本当にページを離れる場合」と「bfcacheに一時保存される
     // だけの場合」の両方で発火し、event.persistedで区別できる。
-    // これを区別せず常にAudioContextを閉じてしまうと、bfcacheから
-    // 戻ってきた際にscriptが再実行されない(=init()が呼ばれ直さない)
-    // ため、二度と音が鳴らせない状態になっていた。
-    // → bfcache行きの場合は「一時停止」に留め、bfcacheから戻った瞬間
-    //   (pageshowでevent.persisted===true)に同じcontextを再開する。
-    //   本当にページを離れる場合のみ完全に破棄する。
+    // bfcacheへの一時退避の場合は何もしない(ブラウザの標準動作に任せ、
+    // こちらから能動的にsuspend/resumeは行わない)。本当に離れる場合
+    // のみ完全に破棄する。
     window.addEventListener('pagehide', function (e) {
-      if (e && e.persisted) {
-        try { if (ctx && ctx.state === 'running') ctx.suspend().catch(function () {}); } catch (err) {}
-      } else {
+      if (!(e && e.persisted)) {
         shutdown();
-      }
-    });
-    window.addEventListener('pageshow', function (e) {
-      if (e && e.persisted && !closed && hasGesture) {
-        getCtx();
-        maybeStart();
       }
     });
 
@@ -180,17 +142,20 @@
       .then(function (decoded) {
         if (!decoded || closed) return;
         buffer = decoded;
-        maybeStart(); // 既に操作済みで表示中なら、デコード完了と同時に再生開始
+        maybeStart(); // 既に操作済みなら、デコード完了と同時に再生開始
       })
       .catch(function () { /* 読み込み失敗時は無音のまま(ゲーム進行には影響させない) */ });
 
     // ----- モバイルの自動再生制限のための解錠。以後の操作でも自己修復の保険として使い続ける -----
+    // (bfcacheから戻ってきた後も、この既存のリスナーがそのまま生きているため、
+    //  次にユーザーが何かをタップした瞬間に自然にresume()が試みられる)
     function onUserGesture() {
       hasGesture = true;
       getCtx();
       maybeStart();
     }
     document.addEventListener('pointerdown', onUserGesture);
+    document.addEventListener('touchstart', onUserGesture);
     document.addEventListener('keydown', onUserGesture);
     document.addEventListener('click', onUserGesture);
     document.addEventListener('touchend', onUserGesture);
