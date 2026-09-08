@@ -1,33 +1,55 @@
-// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v10)
+// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v11)
+//
+// ===== 診断ログ機能について =====
+// URLの末尾に ?bgmdebug=1 を付けて開くと、画面上部に半透明のログが
+// 表示される(通常プレイ時は表示されない)。実機(iPhone Safari)でしか
+// 再現しない不具合の原因を、推測ではなく実際の実行ログで特定するために
+// 追加した診断専用の機能で、ゲームの見た目・動作には一切影響しない。
+// ログには「音源の読み込み」「AudioContextの生成/状態」「resume()の
+// 成否」「実際のgain値の読み取り」「操作イベント」「pagehide/
+// visibilitychange」等、BGM再生に関わる処理の実行順序と結果を記録する。
 //
 // ===== 設計方針 =====
 // 1. 音量は「呼び出し側が数値を渡す」のではなく、この中の1つの表
-//    (TRACKS)だけが持つ。各ページはトラック名(キー)を指定するだけで、
-//    音量の値そのものを外部から渡す・書き換える手段を用意しない。
-//    このgain値は生成時に一度だけ設定し、以後どのイベントが起きても
-//    絶対に書き換えない(マイク使用・画面遷移・復帰等、一切無関係)。
-// 2. 1ページ=1つのAudioContext=1つの音源、を厳守。同一ページ内で
-//    init()が複数回呼ばれても2つ目以降は無視する(二重再生防止)。
+//    (TRACKS)だけが持つ。gain値は生成時に一度だけ設定し、以後どの
+//    イベントが起きても絶対に書き換えない(このことは診断ログの
+//    periodic-checkで実際の値を継続的に読み取って裏付けている)。
+// 2. 1ページ=1つのAudioContext=1つの音源、を厳守。二重初期化防止。
 // 3. <audio>要素・MediaSession API・navigator.audioSessionは
-//    一切使用しない(iPhoneのロック画面/コントロールセンターに
-//    メディア操作を出さないため。navigator.audioSessionは過去に
-//    試して重大な副作用があったため使用しない方針を確定させている)。
-// 4. AudioContextの一時停止/再開は、能動的に何度も制御しようとせず
-//    最小限にしている。
-//    【経緯】以前のバージョンでは、タブが非表示になった瞬間に
-//    ctx.suspend()を呼ぶ処理や、bfcache(戻る操作でページの状態が
-//    保持される仕組み)からの復帰時にctx.resume()を明示的に呼ぶ処理を
-//    追加していたが、実機(iPhone Safari)でSafariの「戻る」操作/
-//    スワイプ操作を行った後、BGM音量がゲーム全体で下がったまま
-//    元に戻らなくなる重大な不具合が発生した。これらの能動的な
-//    suspend/resume制御自体がiOS側の音声セッションに何らかの
-//    悪影響を与えていた可能性が高いため、全て撤去した。
-//    → 現在はページを「本当に離れる」場合(bfcacheへの一時退避ではなく
-//      真の終了)にのみAudioContextを閉じる。それ以外の一時停止/再開は
-//      ブラウザ自身の標準動作、および次にユーザーが操作した瞬間に
-//      resume()を試みる既存の仕組み(自動再生制限の解錠処理)に委ねる。
-//      能動的にstateを操作するコードを増やさないことを優先している。
+//    一切使用しない(navigator.audioSessionは過去に試して重大な
+//    副作用があったため使用しない方針を確定させている)。
+// 4. AudioContextの一時停止/再開を能動的に何度も制御することを避け、
+//    「本当にページを離れる場合」のみ完全に閉じる。それ以外は
+//    ブラウザ標準の挙動と、ユーザー操作時のresume()試行に委ねる
+//    (過去バージョンでの能動的な制御が実機で悪影響を与えた経緯があるため)。
 (function (global) {
+  // ----- 診断ログ(?bgmdebug=1 の時だけ画面上に表示する) -----
+  var DEBUG = false;
+  try { DEBUG = /(?:^|[?&])bgmdebug=1(?:&|$)/.test(location.search); } catch (e) {}
+  var debugLines = [];
+  var debugPanel = null;
+  var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+  function dlog(msg) {
+    if (!DEBUG) return;
+    var now = (window.performance && performance.now) ? performance.now() : Date.now();
+    var line = '[+' + Math.round(now - t0) + 'ms] ' + msg;
+    debugLines.push(line);
+    if (debugLines.length > 80) debugLines.shift();
+    try {
+      if (!debugPanel) {
+        debugPanel = document.createElement('div');
+        debugPanel.id = 'bgmDebugPanel';
+        debugPanel.style.cssText = 'position:fixed;left:0;top:0;right:0;max-height:48vh;' +
+          'overflow-y:auto;background:rgba(0,0,0,0.88);color:#7CFC7C;' +
+          'font:10px/1.45 -apple-system,monospace;padding:6px 8px;z-index:2147483647;' +
+          'white-space:pre-wrap;pointer-events:none;-webkit-user-select:text;user-select:text;';
+        (document.body || document.documentElement).appendChild(debugPanel);
+      }
+      debugPanel.textContent = debugLines.join('\n');
+    } catch (e) {}
+  }
+  global.__bgmDebugLog = debugLines;
+
   // ----- 音量表(唯一の音量設定箇所。外部からはここを直接変更できない) -----
   // 各トラックの音量は、実測したRMS音量をもとに「ステージ2(仏音)を基準に
   // 聴感上の音量を揃える」よう正規化した値。ファイルはAAC(.m4a, 64kbps)
@@ -45,14 +67,22 @@
   // trackKey: 'stage1' | 'stage2' | 'stage3' | 'common'
   // basePath: ページの場所に応じた相対パスの接頭辞('' または '../')
   function initBgm(trackKey, basePath) {
-    if (initialized) return singleton;
+    if (initialized) {
+      dlog('init() called again for "' + trackKey + '" -> IGNORED(二重初期化防止, 既存: 前回のtrackKeyのまま)');
+      return singleton;
+    }
     initialized = true;
 
     var track = TRACKS[trackKey];
-    if (!track) return null; // 未知のキーは何もしない(誤操作で無音量再生を防ぐ)
+    if (!track) {
+      dlog('init("' + trackKey + '") -> 未知のキー。何もしない');
+      return null;
+    }
 
     var vol = track.volume; // ここで確定させた後は二度と書き換えない
     var trackUrl = (basePath || '') + track.url;
+    dlog('init trackKey=' + trackKey + ' url=' + trackUrl + ' vol(固定値)=' + vol +
+      ' documentHidden=' + document.hidden + ' visibilityState=' + document.visibilityState);
 
     var ctx = null;
     var gainNode = null;
@@ -69,30 +99,55 @@
           ctx = new (window.AudioContext || window.webkitAudioContext)();
         } catch (e) {
           ctx = null;
+          dlog('new AudioContext() 失敗: ' + e);
         }
         if (ctx) {
           gainNode = ctx.createGain();
           gainNode.gain.setValueAtTime(vol, ctx.currentTime); // ここ以外でgainを触るコードは存在しない
           gainNode.connect(ctx.destination);
+          dlog('AudioContext生成 state=' + ctx.state + ' sampleRate=' + ctx.sampleRate +
+            ' gain.value(設定直後の読み取り)=' + gainNode.gain.value);
         }
       }
-      // 何らかの理由でsuspendされていた場合のみ、ユーザー操作をきっかけに
-      // 再開を試みる(能動的な監視・強制操作はしない)
       if (ctx && ctx.state === 'suspended') {
-        ctx.resume().catch(function () {});
+        dlog('resume() 試行(state=suspended)');
+        ctx.resume().then(function () {
+          dlog('resume() 成功 -> state=' + ctx.state + ' gain.value=' + (gainNode ? gainNode.gain.value : 'null'));
+        }).catch(function (e) {
+          dlog('resume() 失敗: ' + e);
+        });
       }
       return ctx;
     }
 
     function startPlayback() {
       var c = getCtx();
-      if (!c || !buffer || isPlaying) return;
+      if (!c || !buffer || isPlaying) {
+        dlog('startPlayback() 見送り: ctx=' + !!c + ' buffer=' + !!buffer + ' isPlaying=' + isPlaying);
+        return;
+      }
       sourceNode = c.createBufferSource();
       sourceNode.buffer = buffer;
       sourceNode.loop = true; // 曲の終わりに来たら無音を挟まず先頭へ戻る(途切れなしループ)
       sourceNode.connect(gainNode);
       sourceNode.start(0);
       isPlaying = true;
+      dlog('startPlayback() 実行 state=' + c.state + ' gain.value=' + gainNode.gain.value);
+      schedulePeriodicCheck();
+    }
+
+    // ----- 診断用:再生中、実際のgain値/state/表示状態を定期的に読み取って記録する -----
+    // (「gainは変わっていないはずなのに音が小さく聞こえる」場合、原因が
+    //  このコードの外側(iOS側の出力音量そのもの)にあることを裏付けるため)
+    var periodicTimer = null;
+    function schedulePeriodicCheck() {
+      if (!DEBUG || periodicTimer) return;
+      periodicTimer = setInterval(function () {
+        if (closed) { clearInterval(periodicTimer); return; }
+        dlog('periodic: isPlaying=' + isPlaying + ' ctxState=' + (ctx ? ctx.state : 'null') +
+          ' gain.value=' + (gainNode ? gainNode.gain.value : 'null') +
+          ' hidden=' + document.hidden);
+      }, 4000);
     }
 
     // 「音源の読み込み完了」と「ユーザー操作による解錠」は非同期に起こるため、
@@ -103,36 +158,40 @@
     }
 
     // ----- ページを本当に離れた場合にのみ、AudioContextごと確実に破棄する -----
-    // gainを即座に0にしてから閉じる。close()は非同期のため、万一処理の
-    // 途中でページが強制終了されても「最後に確定していた音量」がゼロに
-    // なるようにする安全策(=閉じきれなくても音が残らない)。
     function shutdown() {
       if (closed) return;
       closed = true;
+      dlog('shutdown() 実行(ページを本当に離れる) gain->0, close()');
       try { if (gainNode) gainNode.gain.setValueAtTime(0, ctx.currentTime); } catch (e) {}
       try { if (sourceNode) sourceNode.stop(); } catch (e) {}
       try { if (ctx) ctx.close(); } catch (e) {}
     }
 
-    // pagehideは「本当にページを離れる場合」と「bfcacheに一時保存される
-    // だけの場合」の両方で発火し、event.persistedで区別できる。
-    // bfcacheへの一時退避の場合は何もしない(ブラウザの標準動作に任せ、
-    // こちらから能動的にsuspend/resumeは行わない)。本当に離れる場合
-    // のみ完全に破棄する。
     window.addEventListener('pagehide', function (e) {
+      dlog('pagehide event persisted=' + (e && e.persisted));
       if (!(e && e.persisted)) {
         shutdown();
       }
     });
+    document.addEventListener('visibilitychange', function () {
+      dlog('visibilitychange -> hidden=' + document.hidden + ' ctxState=' + (ctx ? ctx.state : 'null') +
+        ' gain.value=' + (gainNode ? gainNode.gain.value : 'null'));
+    });
 
     // ----- 音源の読み込み(ページ先頭で呼ぶことで、できるだけ早く開始する) -----
+    dlog('fetch開始: ' + trackUrl);
+    var fetchStartedAt = (window.performance && performance.now) ? performance.now() : Date.now();
     fetch(trackUrl)
-      .then(function (res) { return res.arrayBuffer(); })
+      .then(function (res) {
+        var now = (window.performance && performance.now) ? performance.now() : Date.now();
+        dlog('fetch応答受信 status=' + res.status + ' (' + Math.round(now - fetchStartedAt) + 'ms)');
+        return res.arrayBuffer();
+      })
       .then(function (arrayBuffer) {
+        dlog('arrayBuffer取得完了 bytes=' + arrayBuffer.byteLength);
         var c = getCtx();
         if (!c) return null;
         return new Promise(function (resolve, reject) {
-          // decodeAudioDataは新旧2種類のコールバック形式があるため両対応させる
           var maybePromise = c.decodeAudioData(arrayBuffer, resolve, reject);
           if (maybePromise && typeof maybePromise.then === 'function') {
             maybePromise.then(resolve, reject);
@@ -140,17 +199,23 @@
         });
       })
       .then(function (decoded) {
-        if (!decoded || closed) return;
+        if (!decoded || closed) {
+          dlog('decode完了だが decoded=' + !!decoded + ' closed=' + closed + ' のため再生しない');
+          return;
+        }
         buffer = decoded;
-        maybeStart(); // 既に操作済みなら、デコード完了と同時に再生開始
+        dlog('decodeAudioData完了 duration=' + decoded.duration.toFixed(2) + 's hasGesture=' + hasGesture);
+        maybeStart();
       })
-      .catch(function () { /* 読み込み失敗時は無音のまま(ゲーム進行には影響させない) */ });
+      .catch(function (e) {
+        dlog('読み込み/デコード失敗: ' + e);
+      });
 
     // ----- モバイルの自動再生制限のための解錠。以後の操作でも自己修復の保険として使い続ける -----
-    // (bfcacheから戻ってきた後も、この既存のリスナーがそのまま生きているため、
-    //  次にユーザーが何かをタップした瞬間に自然にresume()が試みられる)
-    function onUserGesture() {
+    function onUserGesture(e) {
+      var already = hasGesture;
       hasGesture = true;
+      if (!already) dlog('初回ユーザー操作検知: ' + e.type);
       getCtx();
       maybeStart();
     }
