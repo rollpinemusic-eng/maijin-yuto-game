@@ -1,4 +1,4 @@
-// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v8)
+// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v9)
 //
 // ===== 設計方針 =====
 // 1. 音量は「呼び出し側が数値を渡す」のではなく、この中の1つの表
@@ -33,11 +33,14 @@
   // 各トラックの音量は、実測したRMS音量をもとに「ステージ2(仏音)を基準に
   // 聴感上の音量を揃える」よう正規化した値。この値を書き換えられるのは
   // このファイルを直接編集する場合のみで、実行時に外部から変更する手段はない。
+  // ファイルはAAC(.m4a, 64kbps)に統一している。元のmp3(64〜128kbps)より
+  // ファイルサイズを大幅に削減し、オープニング/ホーム画面での読み込み
+  // 待ち時間(=BGM再生開始の遅れ)を短縮するため。
   var TRACKS = {
-    stage1: { url: 'bgm/stage1-my-precious.mp3', volume: 0.082 },
-    stage2: { url: 'bgm/stage2-hotoke-no-ne.mp3', volume: 0.32 },
-    stage3: { url: 'bgm/common-jiron-tetsugaku.mp3', volume: 0.214 },
-    common: { url: 'bgm/common-jiron-tetsugaku.mp3', volume: 0.214 }
+    stage1: { url: 'bgm/stage1-my-precious.m4a', volume: 0.082 },
+    stage2: { url: 'bgm/stage2-hotoke-no-ne.m4a', volume: 0.32 },
+    stage3: { url: 'bgm/common-jiron-tetsugaku.m4a', volume: 0.214 },
+    common: { url: 'bgm/common-jiron-tetsugaku.m4a', volume: 0.214 }
   };
 
   var initialized = false; // 同一ページでの誤った二重初期化(=二重再生)を防ぐ
@@ -126,14 +129,39 @@
     });
 
     // ----- ページを完全に離れた場合は、AudioContextごと確実に破棄する -----
+    // gainを即座に0にしてから閉じる。close()は非同期のため、万一処理の
+    // 途中でページが強制終了されても「最後に確定していた音量」がゼロに
+    // なるようにする安全策(=閉じきれなくても音が残らない)。
     function shutdown() {
       if (closed) return;
       closed = true;
+      try { if (gainNode) gainNode.gain.setValueAtTime(0, ctx.currentTime); } catch (e) {}
       try { if (sourceNode) sourceNode.stop(); } catch (e) {}
       try { if (ctx) ctx.close(); } catch (e) {}
     }
-    window.addEventListener('pagehide', shutdown);
-    window.addEventListener('beforeunload', shutdown);
+
+    // ----- bfcache(戻る/進む操作でページの状態がそのまま保持される仕組み)対策 -----
+    // pagehideは「本当にページを離れる場合」と「bfcacheに一時保存される
+    // だけの場合」の両方で発火し、event.persistedで区別できる。
+    // これを区別せず常にAudioContextを閉じてしまうと、bfcacheから
+    // 戻ってきた際にscriptが再実行されない(=init()が呼ばれ直さない)
+    // ため、二度と音が鳴らせない状態になっていた。
+    // → bfcache行きの場合は「一時停止」に留め、bfcacheから戻った瞬間
+    //   (pageshowでevent.persisted===true)に同じcontextを再開する。
+    //   本当にページを離れる場合のみ完全に破棄する。
+    window.addEventListener('pagehide', function (e) {
+      if (e && e.persisted) {
+        try { if (ctx && ctx.state === 'running') ctx.suspend().catch(function () {}); } catch (err) {}
+      } else {
+        shutdown();
+      }
+    });
+    window.addEventListener('pageshow', function (e) {
+      if (e && e.persisted && !closed && hasGesture) {
+        getCtx();
+        maybeStart();
+      }
+    });
 
     // ----- 音源の読み込み(ページ先頭で呼ぶことで、できるだけ早く開始する) -----
     fetch(trackUrl)
