@@ -457,9 +457,9 @@
   <a class="nav-item" id="zukanNavBtn" href="zukan.html">
     <span class="nav-icon">📖</span>図鑑
   </a>
-  <button class="nav-item disabled" type="button" disabled>
-    <span class="nav-icon">⚙️</span>設定
-  </button>
+  <a class="nav-item" id="radioNavBtn" href="radio.html">
+    <span class="nav-icon">📻</span>魔界ラジオ
+  </a>
 </nav>
 
 <!-- ランキング/ゲーム説明はページ遷移させず、ここにiframeで表示する(ホームのBGMを止めないため) -->
@@ -494,6 +494,10 @@
   document.getElementById('zukanNavBtn').addEventListener('click', function (e) {
     e.preventDefault();
     openPanel('zukan.html');
+  });
+  document.getElementById('radioNavBtn').addEventListener('click', function (e) {
+    e.preventDefault();
+    openPanel('radio.html');
   });
   // パネル(iframe)内で「ホームへ戻る」系のリンクが押されたら、このパネルを閉じる
   window.addEventListener('message', function (e) {

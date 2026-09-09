@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>魔界ラジオ ～大喜利ダンジョン～</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #0d0616;
+  color: #f3eefc;
+  font-family: "Zen Maru Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.brush {
+  font-family: "Yuji Syuku", "Zen Maru Gothic", serif;
+}
+
+.wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 22px 16px 40px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #b98cff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  margin-bottom: 10px;
+}
+
+.page-title {
+  margin: 4px 0 2px;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.2;
+  background: linear-gradient(180deg, #fff3b0 0%, #ffd700 55%, #b8860b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 18px rgba(255, 215, 0, 0.35);
+}
+
+.page-subtitle {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: #cdbdea;
+}
+
+/* ----- 電波(オンエア)カード ----- */
+.radio-card {
+  position: relative;
+  border: 1px solid #ffd700;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #241534 0%, #1a0f2e 60%, #140a24 100%);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.16), inset 0 0 0 1px rgba(255, 215, 0, 0.08);
+}
+
+.radio-photo-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-bottom: 1px solid #ffd700;
+  background: #05030a;
+}
+.radio-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 32%;
+  display: block;
+}
+.radio-photo-frame::after {
+  /* 電波っぽいスキャンライン演出(図鑑と共通の表現) */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.09) 3px
+  );
+  pointer-events: none;
+}
+.radio-photo-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(13, 6, 22, 0) 55%, rgba(13, 6, 22, 0.88) 100%);
+  pointer-events: none;
+}
+.radio-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffd700;
+  opacity: 0.85;
+  z-index: 2;
+}
+.radio-corner.tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.radio-corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+.onair-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff4d6d, #b8123a);
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(255, 77, 109, 0.6);
+}
+.onair-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px #fff;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .onair-dot { animation: onairBlink 1.4s ease-in-out infinite; }
+}
+@keyframes onairBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.band-name-plate {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+}
+.band-name-plate .band-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+.band-name-plate .band-yomi {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffd700;
+  letter-spacing: 2px;
+}
+
+.radio-body {
+  padding: 16px 16px 18px;
+}
+
+.freq-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  border-radius: 999px;
+  padding: 3px 11px;
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.radio-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.radio-desc p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: #e6def7;
+}
+.radio-desc strong {
+  color: #ffd700;
+  font-weight: 900;
+}
+
+.radio-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.radio-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 16px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 900;
+  text-decoration: none;
+  text-align: center;
+}
+.radio-btn-icon { font-size: 16px; line-height: 1; }
+.radio-btn.primary {
+  color: #2a1400;
+  background: linear-gradient(180deg, #fff3b0, #ffd700 55%, #e0ac00);
+  box-shadow: 0 6px 18px rgba(255, 215, 0, 0.35);
+}
+.radio-btn.secondary {
+  color: #fff;
+  border: 1px solid #8b5cf6;
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.18), rgba(109, 40, 217, 0.18));
+}
+
+/* ----- 世界観の装飾:電波が魔界と地球をつなぐイメージのウェーブライン ----- */
+.wave-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 16px;
+  color: #4a2f7a;
+}
+.wave-divider::before,
+.wave-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #4a2f7a, transparent);
+}
+.wave-divider span {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #b98cff;
+  white-space: nowrap;
+}
+
+.footnote {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.8;
+  color: #9d8bc0;
+  text-align: center;
+}
+
+.wrap { padding-bottom: 78px; } /* 下部メニュー分の余白 */
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #150c26;
+  border-top: 1px solid #4a2f7a;
+  z-index: 5;
+}
+.nav-item {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 8px 4px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: #7a6a9a;
+  font-family: inherit;
+  text-decoration: none;
+}
+.nav-icon { font-size: 16px; line-height: 1; }
+.nav-item.active {
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+}
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.85)); }
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, #ffd700, #ff6ec7);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+}
+.nav-item.disabled { opacity: 0.4; }
+</style>
+<link rel="preload" as="fetch" href="bgm/common-jiron-tetsugaku.m4a" crossorigin>
+</head>
+<body>
+<script src="bgm.js?v=17"></script>
+<script>
+  // ホーム画面のパネル(iframe)として開かれている場合はホーム側のBGMをそのまま使うため、
+  // このページ自身では別のAudioContextを作らない(単体で開いた場合のみ再生する)
+  if (window.self === window.top) {
+    MajinBGM.init('common', '');
+  } else {
+    // パネル表示中に「ホームへ戻る」系のリンクが押されたら、ページ遷移(=BGM再起動)
+    // させず、親ページにパネルを閉じるよう伝える
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href="index.html"]');
+      if (a) {
+        e.preventDefault();
+        window.parent.postMessage({ majinClosePanel: true }, '*');
+      }
+    });
+  }
+</script>
+<div class="wrap">
+  <a class="back-link" href="index.html">← ホームへ戻る</a>
+  <h1 class="page-title brush">🎸 魔界ラジオ</h1>
+  <p class="page-subtitle">魔界と地球をつなぐ、魔神お気に入りの電波</p>
+
+  <div class="radio-card">
+    <div class="radio-photo-frame">
+      <span class="onair-badge"><span class="onair-dot"></span>ON AIR</span>
+      <span class="radio-corner tl"></span>
+      <span class="radio-corner br"></span>
+      <img class="radio-photo" src="radio/img/aohazi.jpg" alt="アオハジ ライブ写真">
+      <div class="band-name-plate">
+        <p class="band-name brush">アオハジ</p>
+        <p class="band-yomi">AOHAZI</p>
+      </div>
+    </div>
+    <div class="radio-body">
+      <span class="freq-label">📡 魔界電波局 提供バンド</span>
+      <div class="radio-desc">
+        <p>地球にお忍びで訪れていた魔神が、たまたま発見したロックバンド。</p>
+        <p>魔神はルミネへ行くついでにライブハウスへ立ち寄ることがあり、その時に出会ったのがアオハジだった。</p>
+        <p>あまりの格好良さに一撃で魔神のハートを撃ち抜き、以来<strong>魔神お気に入りのバンド</strong>として認定されている。</p>
+        <p>そして実は、この魔界ダンジョンに流れているBGMも、<strong>すべてアオハジが提供</strong>している。魔神と戦っている間、あなたが聴いているその音も、もとは彼らの曲なのだ。</p>
+      </div>
+      <div class="radio-buttons">
+        <a class="radio-btn primary" href="https://music.apple.com/jp/artist/%E3%82%A2%E3%82%AA%E3%83%8F%E3%82%B8/1511082712" target="_blank" rel="noopener">
+          <span class="radio-btn-icon">🎧</span>① 音楽を聴く
+        </a>
+        <a class="radio-btn secondary" href="https://rollpinemusic-eng.github.io/aohazi/" target="_blank" rel="noopener">
+          <span class="radio-btn-icon">🌐</span>② ホームページを見る
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="wave-divider"><span>魔界FM 66.6</span></div>
+  <p class="footnote">今夜も魔神は、地球のライブハウスへ出張中。<br>次にどんなバンドを発見してくるかは、誰にも分からない。</p>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item" href="index.html">
+    <span class="nav-icon">🗡️</span>ステージ
+  </a>
+  <a class="nav-item" href="ranking.html">
+    <span class="nav-icon">🏆</span>ランキング
+  </a>
+  <a class="nav-item" href="zukan.html">
+    <span class="nav-icon">📖</span>図鑑
+  </a>
+  <button class="nav-item active" type="button">
+    <span class="nav-icon">📻</span>魔界ラジオ
+  </button>
+</nav>
+</body>
+</html>
