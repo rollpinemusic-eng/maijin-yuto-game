@@ -1,4 +1,15 @@
-// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v15)
+// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v16)
+//
+// ===== v16での対策(音声入力前後の音量差の解消) =====
+// 音声入力(マイク使用)開始によりOS/Safari側で他の音声(BGM)が
+// 自動的に減音(ダッキング)され、入力終了後もその減音量のまま
+// 戻らない現象が報告された。これはOSの音声セッション管理による
+// もので、AudioContextやgainの操作では制御できない領域のため、
+// (v15までの方針を維持して)音声セッションやAudioContextの
+// 設計には一切手を加えていない。
+// 代わりに、TRACKSの基準音量そのものを「減音された後の体感音量」に
+// 合わせて下げることで、ゲーム開始時点から終了まで音量差を感じない
+// ようにした(各トラックの値を一律 x0.8)。
 //
 // ===== v12での修正(現在も有効) =====
 // 実機の診断ログにより、AudioContextが 'suspended' から
@@ -79,11 +90,13 @@
   // 各トラックの音量は、実測したRMS音量をもとに「ステージ2(仏音)を基準に
   // 聴感上の音量を揃える」よう正規化した値。ファイルはAAC(.m4a, 64kbps)
   // に統一し、読み込み待ち時間を短縮している。
+  // v16: 音声入力後にOS側で減音された音量(体感で元の8割程度)に
+  // 開始時点から合わせるため、上記の正規化値へさらに x0.8 している。
   var TRACKS = {
-    stage1: { url: 'bgm/stage1-my-precious.m4a', volume: 0.082 },
-    stage2: { url: 'bgm/stage2-hotoke-no-ne.m4a', volume: 0.32 },
-    stage3: { url: 'bgm/common-jiron-tetsugaku.m4a', volume: 0.214 },
-    common: { url: 'bgm/common-jiron-tetsugaku.m4a', volume: 0.214 }
+    stage1: { url: 'bgm/stage1-my-precious.m4a', volume: 0.066 },
+    stage2: { url: 'bgm/stage2-hotoke-no-ne.m4a', volume: 0.256 },
+    stage3: { url: 'bgm/common-jiron-tetsugaku.m4a', volume: 0.171 },
+    common: { url: 'bgm/common-jiron-tetsugaku.m4a', volume: 0.171 }
   };
 
   var initialized = false; // 同一ページでの誤った二重初期化(=二重再生)を防ぐ
