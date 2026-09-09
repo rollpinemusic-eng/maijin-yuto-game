@@ -1,4 +1,10 @@
-// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v16)
+// 魔神ゆうとの笑ろてまうやろ！ 共通BGM管理モジュール(v17)
+//
+// ===== v17での変更(診断パネルの自動スクロールのみ。音声/音量ロジックは無変更) =====
+// 音声入力前後の音量差の原因調査のため、?bgmdebug=1 時のログパネルが
+// 自動で最新行までスクロールするようにした。手動スクロールしないと
+// 新しく増えたログが画面外に隠れてしまい、原因調査の妨げになっていた
+// ため。実際の音量・AudioContext制御には一切手を加えていない。
 //
 // ===== v16での対策(音声入力前後の音量差の解消) =====
 // 音声入力(マイク使用)開始によりOS/Safari側で他の音声(BGM)が
@@ -82,6 +88,9 @@
         (document.body || document.documentElement).appendChild(debugPanel);
       }
       debugPanel.textContent = debugLines.join('\n');
+      // v17: 常に最新行が見えるよう自動で一番下までスクロールする(診断表示のみの変更。
+      // 手動スクロールしないと新しい行が画面外に隠れてしまう問題への対応)
+      debugPanel.scrollTop = debugPanel.scrollHeight;
     } catch (e) {}
   }
   global.__bgmDebugLog = debugLines;
