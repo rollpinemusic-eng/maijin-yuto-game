@@ -1,9 +1,22 @@
 // 魔神ゆうと ～大喜利ダンジョン～ オンラインランキング用Worker
 // ・GitHub Pages(ゲーム本体)のみからのアクセスを許可(CORS完全ロック)
-// ・秘密鍵やAPIキーは一切使用しない(D1バインディングのみ)
+// ・秘密鍵やAPIキーは一切使用しない(D1バインディングのみ、ADMIN_PASSWORDのみ例外)
 // ・1プレイヤー(player_id)につき1行のみ保持し、自己ベストを更新した時だけ上書きする
+//
+// ----- 管理者専用アクセス解析(/track, /stats)について -----
+// 既存のランキング機能(/submit, /leaderboard, scoresテーブル)とは
+// 完全に別のテーブル(players, events)を使う独立した仕組みで、
+// ランキングのロジックには一切手を加えていない。
+// /track は誰でも呼べる(ゲーム側から自動送信される)が、収集するのは
+// 匿名のplayer_id・閲覧ページ・端末種別・国/地域などの集計用途の情報のみ。
+// /stats は管理者パスワード(ADMIN_PASSWORDシークレット)と一致した
+// リクエストのみ集計結果を返す。
 
 const ALLOWED_ORIGIN = 'https://rollpinemusic-eng.github.io';
+
+const ANALYTICS_PAGES = ['home', 'stage1', 'stage2', 'stage3', 'ranking', 'zukan', 'radio', 'help'];
+const ANALYTICS_TYPES = ['pageview', 'click', 'duration'];
+const STAGE_PAGES = ['stage1', 'stage2', 'stage3'];
 
 const GRADE_ORDER = ['Dクラス', 'Cクラス', 'Bクラス', 'Aクラス', 'Sクラス', 'SSクラス', 'SSSクラス'];
 
@@ -16,7 +29,7 @@ function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Password',
     'Vary': 'Origin',
   };
 }
@@ -42,6 +55,12 @@ export default {
       }
       if (url.pathname === '/leaderboard' && request.method === 'GET') {
         return await handleLeaderboard(url, env);
+      }
+      if (url.pathname === '/track' && request.method === 'POST') {
+        return await handleTrack(request, env);
+      }
+      if (url.pathname === '/stats' && request.method === 'GET') {
+        return await handleStats(request, env);
       }
     } catch (err) {
       return json({ error: 'internal error' }, 500);
@@ -150,4 +169,205 @@ async function handleLeaderboard(url, env) {
   }
 
   return json({ top: top, me: me, total: rows.length });
+}
+
+// ===================================================================
+// ここから下:管理者専用アクセス解析(/track, /stats)。
+// ランキング(scoresテーブル・上記の関数群)には一切依存・干渉しない。
+// ===================================================================
+
+function classifyPlatform(ua) {
+  const u = (ua || '').toLowerCase();
+  if (u.includes('iphone') || u.includes('ipad') || u.includes('ipod')) return 'iphone';
+  if (u.includes('android')) return 'android';
+  return 'other';
+}
+
+function classifyBrowser(ua) {
+  const u = (ua || '').toLowerCase();
+  // Chrome(iOS版のCriOSも含む)はUAに'safari'も含むため、chrome判定を先に行う
+  if (u.includes('crios') || (u.includes('chrome') && !u.includes('edg'))) return 'chrome';
+  if (u.includes('safari') && !u.includes('chrome') && !u.includes('crios')) return 'safari';
+  return 'other';
+}
+
+function classifySource(referrer, search) {
+  const r = (referrer || '').toLowerCase();
+  const s = (search || '').toLowerCase();
+  if (s.includes('utm_source=tiktok') || r.includes('tiktok.com')) return 'TikTok';
+  if (s.includes('utm_source=x') || r.includes('twitter.com') || r.includes('x.com') || r.includes('t.co/')) return 'X(Twitter)';
+  if (r.includes('instagram.com')) return 'Instagram';
+  if (r.includes('youtube.com') || r.includes('youtu.be')) return 'YouTube';
+  if (r.includes('google.')) return 'Google';
+  if (r.includes('rollpinemusic-eng.github.io')) return 'サイト内遷移';
+  if (!r) return '直接アクセス/不明';
+  try {
+    return new URL(referrer).hostname || 'その他';
+  } catch (e) {
+    return 'その他';
+  }
+}
+
+// JST(UTC+9)基準での「今日/今週(月曜始まり)/今月」の開始時刻を、
+// 比較用にUTCのISO文字列で返す(created_atはUTCのISO文字列で保存しているため、
+// 文字列比較のままで時系列比較が成立する)。
+function startOfTodayISO() {
+  const jst = new Date(Date.now() + 9 * 3600 * 1000);
+  const y = jst.getUTCFullYear(), m = jst.getUTCMonth(), d = jst.getUTCDate();
+  return new Date(Date.UTC(y, m, d, 0, 0, 0) - 9 * 3600 * 1000).toISOString();
+}
+function startOfWeekISO() {
+  const jst = new Date(Date.now() + 9 * 3600 * 1000);
+  const y = jst.getUTCFullYear(), m = jst.getUTCMonth(), d = jst.getUTCDate();
+  const dow = jst.getUTCDay(); // 0=日,1=月,...
+  const backToMonday = (dow + 6) % 7;
+  return new Date(Date.UTC(y, m, d - backToMonday, 0, 0, 0) - 9 * 3600 * 1000).toISOString();
+}
+function startOfMonthISO() {
+  const jst = new Date(Date.now() + 9 * 3600 * 1000);
+  const y = jst.getUTCFullYear(), m = jst.getUTCMonth();
+  return new Date(Date.UTC(y, m, 1, 0, 0, 0) - 9 * 3600 * 1000).toISOString();
+}
+
+function checkAdminAuth(request, env) {
+  const expected = env.ADMIN_PASSWORD || '';
+  if (!expected) return false; // シークレット未設定時は安全側に倒して常に拒否する
+  const provided = request.headers.get('X-Admin-Password') || '';
+  return provided.length > 0 && provided === expected;
+}
+
+async function handleTrack(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch (e) {
+    return json({ error: 'invalid json' }, 400);
+  }
+
+  const playerId = String(body.playerId || '').slice(0, 64);
+  const type = String(body.type || '');
+  const page = String(body.page || '');
+  const target = body.target ? String(body.target).slice(0, 40) : null;
+  const referrer = body.referrer ? String(body.referrer).slice(0, 300) : '';
+  const search = body.search ? String(body.search).slice(0, 200) : '';
+  const durationMs = Number.isFinite(body.durationMs) ? Math.round(body.durationMs) : null;
+
+  if (!playerId || !ANALYTICS_TYPES.includes(type) || !ANALYTICS_PAGES.includes(page)) {
+    return json({ error: 'invalid payload' }, 400);
+  }
+  if (type === 'duration' && (durationMs == null || durationMs < 500 || durationMs > 3 * 60 * 60 * 1000)) {
+    return json({ error: 'invalid duration' }, 400);
+  }
+
+  const ua = request.headers.get('User-Agent') || '';
+  const platform = classifyPlatform(ua);
+  const browser = classifyBrowser(ua);
+  const country = (request.cf && request.cf.country) || null;
+  const region = (request.cf && request.cf.region) || null;
+  const source = classifySource(referrer, search);
+  const now = new Date().toISOString();
+
+  try {
+    await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO players (player_id, first_seen_at, last_seen_at) VALUES (?, ?, ?)
+         ON CONFLICT(player_id) DO UPDATE SET last_seen_at = excluded.last_seen_at`
+      ).bind(playerId, now, now),
+      env.DB.prepare(
+        `INSERT INTO events (player_id, type, page, target, duration_ms, referrer, search, platform, browser, country, region, source, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(playerId, type, page, target, durationMs, referrer, search, platform, browser, country, region, source, now),
+    ]);
+  } catch (e) {
+    // 集計に失敗しても、ゲーム側の体験には一切影響させない
+    return json({ ok: false }, 200);
+  }
+
+  return json({ ok: true }, 200);
+}
+
+function firstRow(batchResult) {
+  return (batchResult && batchResult.results && batchResult.results[0]) || {};
+}
+function allRows(batchResult) {
+  return (batchResult && batchResult.results) || [];
+}
+
+async function handleStats(request, env) {
+  if (!checkAdminAuth(request, env)) {
+    return json({ error: 'unauthorized' }, 401);
+  }
+
+  const todayStart = startOfTodayISO();
+  const weekStart = startOfWeekISO();
+  const monthStart = startOfMonthISO();
+  const stageList = STAGE_PAGES.map(() => '?').join(',');
+
+  const stmts = [
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND page IN (${stageList})`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, todayStart),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, weekStart),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, monthStart),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='pageview' AND page IN (${stageList})`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' AND page IN (${stageList}) GROUP BY page`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT COUNT(*) c FROM players WHERE first_seen_at >= ?`).bind(todayStart),
+    env.DB.prepare(`SELECT COUNT(*) c FROM players WHERE last_seen_at >= ? AND first_seen_at < ?`).bind(todayStart, todayStart),
+    env.DB.prepare(`SELECT platform, COUNT(*) c FROM events WHERE type='pageview' GROUP BY platform`),
+    env.DB.prepare(`SELECT browser, COUNT(*) c FROM events WHERE type='pageview' GROUP BY browser`),
+    env.DB.prepare(`SELECT country, COUNT(*) c FROM events WHERE type='pageview' AND country IS NOT NULL GROUP BY country ORDER BY c DESC LIMIT 15`),
+    env.DB.prepare(`SELECT country, region, COUNT(*) c FROM events WHERE type='pageview' AND region IS NOT NULL AND region != '' GROUP BY country, region ORDER BY c DESC LIMIT 15`),
+    env.DB.prepare(`SELECT AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND page IN (${stageList})`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT page, AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND page IN (${stageList}) GROUP BY page`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' GROUP BY page ORDER BY c DESC`),
+    env.DB.prepare(`SELECT page, COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' GROUP BY page`),
+    env.DB.prepare(`SELECT source, COUNT(*) c FROM events WHERE type='pageview' GROUP BY source ORDER BY c DESC LIMIT 15`),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND page='radio' AND target='music'`),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND page='radio' AND target='homepage'`),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='click' AND page='radio' AND target='homepage'`),
+  ];
+
+  const r = await env.DB.batch(stmts);
+
+  const pageViewCounts = {};
+  allRows(r[14]).forEach((row) => { pageViewCounts[row.page] = row.c; });
+  const pageViewUniques = {};
+  allRows(r[15]).forEach((row) => { pageViewUniques[row.page] = row.c; });
+  const stagePlayCounts = {};
+  allRows(r[5]).forEach((row) => { stagePlayCounts[row.page] = row.c; });
+  const durationByStage = {};
+  allRows(r[13]).forEach((row) => { durationByStage[row.page] = { avgMs: row.a || 0, count: row.c || 0 }; });
+
+  return json({
+    generatedAt: new Date().toISOString(),
+    players: {
+      totalPlayed: firstRow(r[0]).c || 0,
+      playedToday: firstRow(r[1]).c || 0,
+      playedThisWeek: firstRow(r[2]).c || 0,
+      playedThisMonth: firstRow(r[3]).c || 0,
+      newToday: firstRow(r[6]).c || 0,
+      returningToday: firstRow(r[7]).c || 0,
+    },
+    plays: {
+      total: firstRow(r[4]).c || 0,
+      byStage: { stage1: stagePlayCounts.stage1 || 0, stage2: stagePlayCounts.stage2 || 0, stage3: stagePlayCounts.stage3 || 0 },
+    },
+    duration: {
+      overallAvgMs: firstRow(r[12]).a || 0,
+      overallCount: firstRow(r[12]).c || 0,
+      byStage: durationByStage,
+    },
+    platform: allRows(r[8]).map((row) => ({ platform: row.platform || 'other', count: row.c })),
+    browser: allRows(r[9]).map((row) => ({ browser: row.browser || 'other', count: row.c })),
+    country: allRows(r[10]).map((row) => ({ country: row.country, count: row.c })),
+    region: allRows(r[11]).map((row) => ({ country: row.country, region: row.region, count: row.c })),
+    pageViews: ANALYTICS_PAGES.map((p) => ({ page: p, views: pageViewCounts[p] || 0, uniques: pageViewUniques[p] || 0 })),
+    sources: allRows(r[16]).map((row) => ({ source: row.source || '不明', count: row.c })),
+    radio: {
+      views: pageViewCounts.radio || 0,
+      uniqueViewers: pageViewUniques.radio || 0,
+      musicClicks: firstRow(r[17]).c || 0,
+      homepageClicks: firstRow(r[18]).c || 0,
+      homepageUniqueClickers: firstRow(r[19]).c || 0,
+    },
+  });
 }

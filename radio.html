@@ -333,6 +333,16 @@ html, body {
     });
   }
 </script>
+<script src="analytics.js"></script>
+<script>
+  MajinAnalytics.init('radio');
+  document.getElementById('radioMusicBtn').addEventListener('click', function () {
+    MajinAnalytics.trackClick('radio', 'music');
+  });
+  document.getElementById('radioHomepageBtn').addEventListener('click', function () {
+    MajinAnalytics.trackClick('radio', 'homepage');
+  });
+</script>
 <div class="wrap">
   <a class="back-link" href="index.html">← ホームへ戻る</a>
   <h1 class="page-title brush">🎸 魔界ラジオ</h1>
@@ -358,10 +368,10 @@ html, body {
         <p>そして実は、この魔界ダンジョンに流れているBGMも、<strong>すべてアオハジが提供</strong>している。魔神と戦っている間、あなたが聴いているその音も、もとは彼らの曲なのだ。</p>
       </div>
       <div class="radio-buttons">
-        <a class="radio-btn primary" href="https://music.apple.com/jp/artist/%E3%82%A2%E3%82%AA%E3%83%8F%E3%82%B8/1511082712" target="_blank" rel="noopener">
+        <a class="radio-btn primary" id="radioMusicBtn" href="https://music.apple.com/jp/artist/%E3%82%A2%E3%82%AA%E3%83%8F%E3%82%B8/1511082712" target="_blank" rel="noopener">
           <span class="radio-btn-icon">🎧</span>① 音楽を聴く
         </a>
-        <a class="radio-btn secondary" href="https://rollpinemusic-eng.github.io/aohazi/" target="_blank" rel="noopener">
+        <a class="radio-btn secondary" id="radioHomepageBtn" href="https://rollpinemusic-eng.github.io/aohazi/" target="_blank" rel="noopener">
           <span class="radio-btn-icon">🌐</span>② ホームページを見る
         </a>
       </div>
