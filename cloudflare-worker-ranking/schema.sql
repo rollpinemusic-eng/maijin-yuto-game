@@ -39,8 +39,17 @@ CREATE TABLE IF NOT EXISTS events (
   country TEXT,
   region TEXT,
   source TEXT,               -- 流入元の分類(TikTok/X(Twitter)/Google/直接アクセス等)
+  is_bot INTEGER DEFAULT 0,  -- 1=Bot/クローラーと判定した記録(集計から除外する。行自体は削除しない)
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_events_type_page ON events(type, page);
 CREATE INDEX IF NOT EXISTS idx_events_player ON events(player_id);
 CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at);
+CREATE INDEX IF NOT EXISTS idx_events_is_bot ON events(is_bot);
+
+-- ----- 2026-09-11 追記:is_botカラムの追加(既存データはそのまま保持) -----
+-- 上のCREATE TABLEは「テーブルが存在しない場合のみ」実行されるため、
+-- 既にテーブルが存在する本番DBには以下のALTER TABLEを1回だけ別途実行して
+-- カラムを追加している(このファイルをそのまま再実行しても
+-- IF NOT EXISTSと同様、二重実行によるエラー・データ消失は起きない設計)。
+-- ALTER TABLE events ADD COLUMN is_bot INTEGER DEFAULT 0;

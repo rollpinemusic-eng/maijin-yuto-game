@@ -191,6 +191,24 @@ function classifyBrowser(ua) {
   return 'other';
 }
 
+// Bot/クローラーと思われるUser-Agentのパターン。実際の人間が使うブラウザの
+// UAには通常含まれない文字列のみを対象にしており、誤検知(実ユーザーを
+// Bot扱いしてしまう)を避けるため保守的なリストにしている。
+// 該当した記録はevents.is_bot=1で保存はするが、集計(/stats)からは除外する。
+const BOT_UA_PATTERNS = [
+  'bot', 'crawl', 'spider', 'slurp', 'facebookexternalhit', 'bingpreview',
+  'lighthouse', 'headlesschrome', 'pingdom', 'uptimerobot', 'python-requests',
+  'python-urllib', 'curl/', 'wget/', 'go-http-client', 'okhttp', 'axios/',
+  'node-fetch', 'monitor', 'validator', 'discordbot', 'telegrambot',
+  'whatsapp', 'linkedinbot', 'twitterbot', 'skypeuripreview', 'embedly',
+];
+
+function classifyIsBot(ua) {
+  const u = (ua || '').toLowerCase();
+  if (!u) return false;
+  return BOT_UA_PATTERNS.some((p) => u.includes(p));
+}
+
 function classifySource(referrer, search) {
   const r = (referrer || '').toLowerCase();
   const s = (search || '').toLowerCase();
@@ -265,19 +283,28 @@ async function handleTrack(request, env) {
   const country = (request.cf && request.cf.country) || null;
   const region = (request.cf && request.cf.region) || null;
   const source = classifySource(referrer, search);
+  const isBot = classifyIsBot(ua);
   const now = new Date().toISOString();
 
   try {
-    await env.DB.batch([
+    const writes = [
       env.DB.prepare(
-        `INSERT INTO players (player_id, first_seen_at, last_seen_at) VALUES (?, ?, ?)
-         ON CONFLICT(player_id) DO UPDATE SET last_seen_at = excluded.last_seen_at`
-      ).bind(playerId, now, now),
-      env.DB.prepare(
-        `INSERT INTO events (player_id, type, page, target, duration_ms, referrer, search, platform, browser, country, region, source, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      ).bind(playerId, type, page, target, durationMs, referrer, search, platform, browser, country, region, source, now),
-    ]);
+        `INSERT INTO events (player_id, type, page, target, duration_ms, referrer, search, platform, browser, country, region, source, is_bot, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(playerId, type, page, target, durationMs, referrer, search, platform, browser, country, region, source, isBot ? 1 : 0, now),
+    ];
+    // Botと判定した記録は、events(監査用の生ログ)には残すが、
+    // players(新規/再訪問ユーザー判定の元になるテーブル)は更新しない。
+    // これにより「新規ユーザー数」等の集計にBotが一切混ざらないようにする。
+    if (!isBot) {
+      writes.push(
+        env.DB.prepare(
+          `INSERT INTO players (player_id, first_seen_at, last_seen_at) VALUES (?, ?, ?)
+           ON CONFLICT(player_id) DO UPDATE SET last_seen_at = excluded.last_seen_at`
+        ).bind(playerId, now, now)
+      );
+    }
+    await env.DB.batch(writes);
   } catch (e) {
     // 集計に失敗しても、ゲーム側の体験には一切影響させない
     return json({ ok: false }, 200);
@@ -302,28 +329,36 @@ async function handleStats(request, env) {
   const weekStart = startOfWeekISO();
   const monthStart = startOfMonthISO();
   const stageList = STAGE_PAGES.map(() => '?').join(',');
+  // Botと判定した記録(is_bot=1)は行として残しつつ、集計からは除外する。
+  // 追加前の既存データはis_botカラムがデフォルト値の0として読めるため、
+  // 過去データも「実ユーザー」として正しく扱われる(データの再集計・削除は不要)。
+  const NB = `(is_bot IS NULL OR is_bot = 0)`;
 
   const stmts = [
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND page IN (${stageList})`).bind(...STAGE_PAGES),
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, todayStart),
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, weekStart),
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, monthStart),
-    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='pageview' AND page IN (${stageList})`).bind(...STAGE_PAGES),
-    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' AND page IN (${stageList}) GROUP BY page`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList})`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, todayStart),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, weekStart),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, monthStart),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList})`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) GROUP BY page`).bind(...STAGE_PAGES),
     env.DB.prepare(`SELECT COUNT(*) c FROM players WHERE first_seen_at >= ?`).bind(todayStart),
     env.DB.prepare(`SELECT COUNT(*) c FROM players WHERE last_seen_at >= ? AND first_seen_at < ?`).bind(todayStart, todayStart),
-    env.DB.prepare(`SELECT platform, COUNT(*) c FROM events WHERE type='pageview' GROUP BY platform`),
-    env.DB.prepare(`SELECT browser, COUNT(*) c FROM events WHERE type='pageview' GROUP BY browser`),
-    env.DB.prepare(`SELECT country, COUNT(*) c FROM events WHERE type='pageview' AND country IS NOT NULL GROUP BY country ORDER BY c DESC LIMIT 15`),
-    env.DB.prepare(`SELECT country, region, COUNT(*) c FROM events WHERE type='pageview' AND region IS NOT NULL AND region != '' GROUP BY country, region ORDER BY c DESC LIMIT 15`),
-    env.DB.prepare(`SELECT AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND page IN (${stageList})`).bind(...STAGE_PAGES),
-    env.DB.prepare(`SELECT page, AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND page IN (${stageList}) GROUP BY page`).bind(...STAGE_PAGES),
-    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' GROUP BY page ORDER BY c DESC`),
-    env.DB.prepare(`SELECT page, COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' GROUP BY page`),
-    env.DB.prepare(`SELECT source, COUNT(*) c FROM events WHERE type='pageview' GROUP BY source ORDER BY c DESC LIMIT 15`),
-    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND page='radio' AND target='music'`),
-    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND page='radio' AND target='homepage'`),
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='click' AND page='radio' AND target='homepage'`),
+    env.DB.prepare(`SELECT platform, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} GROUP BY platform`),
+    env.DB.prepare(`SELECT browser, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} GROUP BY browser`),
+    env.DB.prepare(`SELECT country, COUNT(*) c, COUNT(DISTINCT player_id) u FROM events WHERE type='pageview' AND ${NB} AND country IS NOT NULL GROUP BY country ORDER BY u DESC LIMIT 15`),
+    env.DB.prepare(`SELECT country, region, COUNT(*) c, COUNT(DISTINCT player_id) u FROM events WHERE type='pageview' AND ${NB} AND region IS NOT NULL AND region != '' GROUP BY country, region ORDER BY u DESC LIMIT 15`),
+    env.DB.prepare(`SELECT AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND ${NB} AND page IN (${stageList})`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT page, AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND ${NB} AND page IN (${stageList}) GROUP BY page`).bind(...STAGE_PAGES),
+    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} GROUP BY page ORDER BY c DESC`),
+    env.DB.prepare(`SELECT page, COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} GROUP BY page`),
+    env.DB.prepare(`SELECT source, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} GROUP BY source ORDER BY c DESC LIMIT 15`),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND ${NB} AND page='radio' AND target='music'`),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND ${NB} AND page='radio' AND target='homepage'`),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='click' AND ${NB} AND page='radio' AND target='homepage'`),
+    // 「総アクセス数」= 全ページ合計のページビュー件数(Bot除外・重複アクセスも1件ずつ加算)。
+    // ユニークユーザー数とは異なる指標であることを明確にするため別項目として返す。
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='pageview' AND ${NB}`),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE is_bot = 1`),
   ];
 
   const r = await env.DB.batch(stmts);
@@ -351,6 +386,13 @@ async function handleStats(request, env) {
       total: firstRow(r[4]).c || 0,
       byStage: { stage1: stagePlayCounts.stage1 || 0, stage2: stagePlayCounts.stage2 || 0, stage3: stagePlayCounts.stage3 || 0 },
     },
+    // 総アクセス数(全ページの合計ページビュー件数)。同一ユーザーの再アクセスも
+    // 1件ずつ加算される「延べ数」で、ユニークユーザー数(players.totalPlayed等)
+    // とは異なる指標。混同を避けるため必ず両方を返す。
+    traffic: {
+      totalPageviews: firstRow(r[20]).c || 0,
+      botEventsExcluded: firstRow(r[21]).c || 0,
+    },
     duration: {
       overallAvgMs: firstRow(r[12]).a || 0,
       overallCount: firstRow(r[12]).c || 0,
@@ -358,8 +400,8 @@ async function handleStats(request, env) {
     },
     platform: allRows(r[8]).map((row) => ({ platform: row.platform || 'other', count: row.c })),
     browser: allRows(r[9]).map((row) => ({ browser: row.browser || 'other', count: row.c })),
-    country: allRows(r[10]).map((row) => ({ country: row.country, count: row.c })),
-    region: allRows(r[11]).map((row) => ({ country: row.country, region: row.region, count: row.c })),
+    country: allRows(r[10]).map((row) => ({ country: row.country, count: row.c, uniquePlayers: row.u })),
+    region: allRows(r[11]).map((row) => ({ country: row.country, region: row.region, count: row.c, uniquePlayers: row.u })),
     pageViews: ANALYTICS_PAGES.map((p) => ({ page: p, views: pageViewCounts[p] || 0, uniques: pageViewUniques[p] || 0 })),
     sources: allRows(r[16]).map((row) => ({ source: row.source || '不明', count: row.c })),
     radio: {

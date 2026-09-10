@@ -128,6 +128,12 @@ html, body {
   letter-spacing: 1.5px;
   color: #ffd700;
 }
+.section-note {
+  margin: -4px 0 10px;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: #6f5f8f;
+}
 
 .stat-grid {
   display: grid;
@@ -384,14 +390,23 @@ html, body {
     var html = '';
 
     html += '<div class="section">';
-    html += '  <p class="section-title">👥 プレイ人数(ユニークユーザー)</p>';
+    html += '  <p class="section-title">👥 プレイヤー数(ユニークユーザー)</p>';
+    html += '  <p class="section-note">同じ端末からの再アクセスは1人として数えます(別ブラウザ・シークレットウィンドウは別カウントになります)</p>';
     html += '  <div class="stat-grid">';
-    html += statTile('総プレイ人数', fmtNum(data.players.totalPlayed), { wide: true });
+    html += statTile('総プレイヤー数(ユニーク)', fmtNum(data.players.totalPlayed), { wide: true });
     html += statTile('今日', fmtNum(data.players.playedToday));
     html += statTile('今週', fmtNum(data.players.playedThisWeek));
     html += statTile('今月', fmtNum(data.players.playedThisMonth), { wide: true });
     html += statTile('新規ユーザー(今日)', fmtNum(data.players.newToday));
     html += statTile('再訪問ユーザー(今日)', fmtNum(data.players.returningToday));
+    html += '  </div>';
+    html += '</div>';
+
+    html += '<div class="section">';
+    html += '  <p class="section-title">📶 総アクセス数(のべ)</p>';
+    html += '  <p class="section-note">全ページの閲覧回数の合計です。同じ人が何度も開いた分・同じページを行き来した分もすべて1件ずつ加算されるため、上のユニークユーザー数より大きくなるのが正常です。Bot/クローラーと判定した分(' + fmtNum(data.traffic.botEventsExcluded) + '件)は含みません。</p>';
+    html += '  <div class="stat-grid">';
+    html += statTile('総アクセス数(全ページ合計)', fmtNum(data.traffic.totalPageviews), { wide: true });
     html += '  </div>';
     html += '</div>';
 
@@ -425,16 +440,16 @@ html, body {
     html += '</div>';
 
     html += '<div class="section">';
-    html += '  <p class="section-title">🌍 国別アクセス数</p>';
+    html += '  <p class="section-title">🌍 国別 ユニーク人数 / アクセス数</p>';
     html += listCard(data.country, function (r) {
-      return '<div class="list-row"><span class="list-row-name">' + escapeHtml(r.country || '不明') + '</span><span class="list-row-num">' + fmtNum(r.count) + '</span></div>';
+      return '<div class="list-row"><span class="list-row-name">' + escapeHtml(r.country || '不明') + '</span><span class="list-row-num">' + fmtNum(r.uniquePlayers) + '人<small>(のべ' + fmtNum(r.count) + '件)</small></span></div>';
     });
     html += '</div>';
 
     html += '<div class="section">';
-    html += '  <p class="section-title">📍 都道府県・地域別アクセス数(取得可能な範囲)</p>';
+    html += '  <p class="section-title">📍 都道府県・地域別(取得可能な範囲)</p>';
     html += listCard(data.region, function (r) {
-      return '<div class="list-row"><span class="list-row-name">' + escapeHtml(r.region || '不明') + '<span class="sub">' + escapeHtml(r.country || '') + '</span></span><span class="list-row-num">' + fmtNum(r.count) + '</span></div>';
+      return '<div class="list-row"><span class="list-row-name">' + escapeHtml(r.region || '不明') + '<span class="sub">' + escapeHtml(r.country || '') + '</span></span><span class="list-row-num">' + fmtNum(r.uniquePlayers) + '人<small>(のべ' + fmtNum(r.count) + '件)</small></span></div>';
     });
     html += '</div>';
 
