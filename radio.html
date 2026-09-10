@@ -333,14 +333,20 @@ html, body {
     });
   }
 </script>
-<script src="analytics.js"></script>
+<script src="analytics.js?v=2"></script>
 <script>
   MajinAnalytics.init('radio');
-  document.getElementById('radioMusicBtn').addEventListener('click', function () {
-    MajinAnalytics.trackClick('radio', 'music');
-  });
-  document.getElementById('radioHomepageBtn').addEventListener('click', function () {
-    MajinAnalytics.trackClick('radio', 'homepage');
+  // ボタン本体(#radioMusicBtn/#radioHomepageBtn)はこの<script>より後のHTMLに
+  // あるため、ここで直接getElementByIdすると要素がまだ存在せずnullになり、
+  // addEventListenerがエラーになって2つとも登録されない不具合があった。
+  // DOMContentLoadedまで待ってから登録するよう修正。
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('radioMusicBtn').addEventListener('click', function () {
+      MajinAnalytics.trackClick('radio', 'music');
+    });
+    document.getElementById('radioHomepageBtn').addEventListener('click', function () {
+      MajinAnalytics.trackClick('radio', 'homepage');
+    });
   });
 </script>
 <div class="wrap">

@@ -25,10 +25,17 @@
 
   function send(payload) {
     try {
+      var body = JSON.stringify(payload);
+      // target="_blank"の外部リンクをタップした直後など、ページ遷移と
+      // ほぼ同時に発生するケースではfetch()より navigator.sendBeacon() の
+      // 方が送信の取りこぼしが少ないため、使える場合はこちらを優先する。
+      if (navigator.sendBeacon && navigator.sendBeacon(API + '/track', body)) {
+        return;
+      }
       fetch(API + '/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: body,
         keepalive: true,
       }).catch(function () {});
     } catch (e) {}
