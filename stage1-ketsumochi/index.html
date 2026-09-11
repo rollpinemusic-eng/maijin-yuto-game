@@ -3368,9 +3368,10 @@ html, body {
     if (isInAppBrowser) return false;
     if (isIOS) {
       // iOSでは実機動作が確認できている「本物のSafari」のみ許可する。
-      // CriOS(iPhone版Chrome)/FxiOS/EdgiOS/OPiOS等はwebkitSpeechRecognition
-      // が存在してもiOSの制約で機能しないため、ここで除外する。
-      var isOtherIOSBrowser = /CriOS|FxiOS|EdgiOS|OPiOS|Mercury/i.test(ua);
+      // CriOS(iPhone版Chrome)/FxiOS/EdgiOS/OPiOS/GSA(Googleアプリ内の
+      // ブラウザ)等はwebkitSpeechRecognitionが存在してもiOSの制約で
+      // 機能しないため、ここで除外する。
+      var isOtherIOSBrowser = /CriOS|FxiOS|EdgiOS|OPiOS|Mercury|GSA/i.test(ua);
       if (isOtherIOSBrowser) return false;
     }
     return true;
