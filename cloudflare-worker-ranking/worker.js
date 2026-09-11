@@ -18,6 +18,15 @@ const ANALYTICS_PAGES = ['home', 'stage1', 'stage2', 'stage3', 'ranking', 'zukan
 const ANALYTICS_TYPES = ['pageview', 'click', 'duration'];
 const STAGE_PAGES = ['stage1', 'stage2', 'stage3'];
 
+// 正式公開日時(2026-09-11 21:00 JST = UTC 12:00)。/stats の集計期間切替
+// (「公開後」)でのみ使用する。データの削除・リセットは一切行わず、
+// 既存のplayers/events/scoresテーブルはそのまま、集計時にこの時刻以降の
+// 行だけを対象にするフィルタとして使う。
+const LAUNCH_AT_ISO = '2026-09-11T12:00:00.000Z';
+// 「全期間」表示用のダミー下限(実データより確実に古い日付なので、
+// created_at >= EPOCH_ISO は常に真になり実質フィルタなしと同じになる)。
+const EPOCH_ISO = '0001-01-01T00:00:00.000Z';
+
 const GRADE_ORDER = ['Dクラス', 'Cクラス', 'Bクラス', 'Aクラス', 'Sクラス', 'SSクラス', 'SSSクラス'];
 
 function gradeWeight(grade) {
@@ -325,6 +334,13 @@ async function handleStats(request, env) {
     return json({ error: 'unauthorized' }, 401);
   }
 
+  const url = new URL(request.url);
+  // 期間切替:「公開後」が指定された場合のみLAUNCH_AT_ISO以降に絞る。
+  // 指定が無い(=「全期間」)場合はEPOCH_ISOを使い、実質フィルタなしにする。
+  // データの削除・リセットは行わず、集計時の下限値を変えるだけ。
+  const period = url.searchParams.get('period') === 'launch' ? 'launch' : 'all';
+  const since = period === 'launch' ? LAUNCH_AT_ISO : EPOCH_ISO;
+
   const todayStart = startOfTodayISO();
   const weekStart = startOfWeekISO();
   const monthStart = startOfMonthISO();
@@ -335,30 +351,30 @@ async function handleStats(request, env) {
   const NB = `(is_bot IS NULL OR is_bot = 0)`;
 
   const stmts = [
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList})`).bind(...STAGE_PAGES),
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, todayStart),
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, weekStart),
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, monthStart),
-    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList})`).bind(...STAGE_PAGES),
-    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) GROUP BY page`).bind(...STAGE_PAGES),
-    env.DB.prepare(`SELECT COUNT(*) c FROM players WHERE first_seen_at >= ?`).bind(todayStart),
-    env.DB.prepare(`SELECT COUNT(*) c FROM players WHERE last_seen_at >= ? AND first_seen_at < ?`).bind(todayStart, todayStart),
-    env.DB.prepare(`SELECT platform, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} GROUP BY platform`),
-    env.DB.prepare(`SELECT browser, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} GROUP BY browser`),
-    env.DB.prepare(`SELECT country, COUNT(*) c, COUNT(DISTINCT player_id) u FROM events WHERE type='pageview' AND ${NB} AND country IS NOT NULL GROUP BY country ORDER BY u DESC LIMIT 15`),
-    env.DB.prepare(`SELECT country, region, COUNT(*) c, COUNT(DISTINCT player_id) u FROM events WHERE type='pageview' AND ${NB} AND region IS NOT NULL AND region != '' GROUP BY country, region ORDER BY u DESC LIMIT 15`),
-    env.DB.prepare(`SELECT AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND ${NB} AND page IN (${stageList})`).bind(...STAGE_PAGES),
-    env.DB.prepare(`SELECT page, AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND ${NB} AND page IN (${stageList}) GROUP BY page`).bind(...STAGE_PAGES),
-    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} GROUP BY page ORDER BY c DESC`),
-    env.DB.prepare(`SELECT page, COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} GROUP BY page`),
-    env.DB.prepare(`SELECT source, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} GROUP BY source ORDER BY c DESC LIMIT 15`),
-    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND ${NB} AND page='radio' AND target='music'`),
-    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND ${NB} AND page='radio' AND target='homepage'`),
-    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='click' AND ${NB} AND page='radio' AND target='homepage'`),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, since),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= MAX(?, ?)`).bind(...STAGE_PAGES, todayStart, since),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= MAX(?, ?)`).bind(...STAGE_PAGES, weekStart, since),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= MAX(?, ?)`).bind(...STAGE_PAGES, monthStart, since),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, since),
+    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND page IN (${stageList}) AND created_at >= ? GROUP BY page`).bind(...STAGE_PAGES, since),
+    env.DB.prepare(`SELECT COUNT(*) c FROM players WHERE first_seen_at >= MAX(?, ?)`).bind(todayStart, since),
+    env.DB.prepare(`SELECT COUNT(*) c FROM players WHERE last_seen_at >= ? AND first_seen_at < ? AND first_seen_at >= ?`).bind(todayStart, todayStart, since),
+    env.DB.prepare(`SELECT platform, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND created_at >= ? GROUP BY platform`).bind(since),
+    env.DB.prepare(`SELECT browser, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND created_at >= ? GROUP BY browser`).bind(since),
+    env.DB.prepare(`SELECT country, COUNT(*) c, COUNT(DISTINCT player_id) u FROM events WHERE type='pageview' AND ${NB} AND country IS NOT NULL AND created_at >= ? GROUP BY country ORDER BY u DESC LIMIT 15`).bind(since),
+    env.DB.prepare(`SELECT country, region, COUNT(*) c, COUNT(DISTINCT player_id) u FROM events WHERE type='pageview' AND ${NB} AND region IS NOT NULL AND region != '' AND created_at >= ? GROUP BY country, region ORDER BY u DESC LIMIT 15`).bind(since),
+    env.DB.prepare(`SELECT AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND ${NB} AND page IN (${stageList}) AND created_at >= ?`).bind(...STAGE_PAGES, since),
+    env.DB.prepare(`SELECT page, AVG(duration_ms) a, COUNT(*) c FROM events WHERE type='duration' AND ${NB} AND page IN (${stageList}) AND created_at >= ? GROUP BY page`).bind(...STAGE_PAGES, since),
+    env.DB.prepare(`SELECT page, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND created_at >= ? GROUP BY page ORDER BY c DESC`).bind(since),
+    env.DB.prepare(`SELECT page, COUNT(DISTINCT player_id) c FROM events WHERE type='pageview' AND ${NB} AND created_at >= ? GROUP BY page`).bind(since),
+    env.DB.prepare(`SELECT source, COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND created_at >= ? GROUP BY source ORDER BY c DESC LIMIT 15`).bind(since),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND ${NB} AND page='radio' AND target='music' AND created_at >= ?`).bind(since),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='click' AND ${NB} AND page='radio' AND target='homepage' AND created_at >= ?`).bind(since),
+    env.DB.prepare(`SELECT COUNT(DISTINCT player_id) c FROM events WHERE type='click' AND ${NB} AND page='radio' AND target='homepage' AND created_at >= ?`).bind(since),
     // 「総アクセス数」= 全ページ合計のページビュー件数(Bot除外・重複アクセスも1件ずつ加算)。
     // ユニークユーザー数とは異なる指標であることを明確にするため別項目として返す。
-    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='pageview' AND ${NB}`),
-    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE is_bot = 1`),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE type='pageview' AND ${NB} AND created_at >= ?`).bind(since),
+    env.DB.prepare(`SELECT COUNT(*) c FROM events WHERE is_bot = 1 AND created_at >= ?`).bind(since),
   ];
 
   const r = await env.DB.batch(stmts);
@@ -374,6 +390,8 @@ async function handleStats(request, env) {
 
   return json({
     generatedAt: new Date().toISOString(),
+    period: period, // 'all' | 'launch' (どちらもデータの削除・変更は伴わない集計時のフィルタ)
+    launchAt: LAUNCH_AT_ISO,
     players: {
       totalPlayed: firstRow(r[0]).c || 0,
       playedToday: firstRow(r[1]).c || 0,

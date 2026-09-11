@@ -115,6 +115,32 @@ html, body {
 .dash-btn.ghost { border-color: #4a2f7a; background: transparent; color: #9d8bc0; }
 .updated-at { margin: 0 0 18px; font-size: 11px; color: #6f5f8f; }
 
+/* 集計期間の切替(全期間/公開後)。データの削除・変更は行わず、
+   /statsへのリクエストに?period=を付けて集計対象を絞るだけ。 */
+.period-toggle {
+  display: flex;
+  border: 1px solid #4a2f7a;
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.period-btn {
+  border: none;
+  background: transparent;
+  color: #9d8bc0;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.period-btn.active {
+  color: #2a1400;
+  background: linear-gradient(180deg, #ffd700, #b8860b);
+}
+.period-note { margin: 0 0 14px; font-size: 10.5px; color: #6f5f8f; }
+
 .section {
   margin-bottom: 22px;
 }
@@ -227,11 +253,16 @@ html, body {
 
   <div id="dashView" hidden>
     <div class="dash-header">
+      <div class="period-toggle" id="periodToggle">
+        <button class="period-btn active" id="periodAllBtn" type="button" data-period="all">全期間</button>
+        <button class="period-btn" id="periodLaunchBtn" type="button" data-period="launch">公開後</button>
+      </div>
       <div class="dash-actions">
         <button class="dash-btn" id="refreshBtn" type="button">🔄 更新</button>
         <button class="dash-btn ghost" id="logoutBtn" type="button">ログアウト</button>
       </div>
     </div>
+    <p class="period-note" id="periodNote"></p>
     <p class="updated-at" id="updatedAt"></p>
 
     <div id="dashBody">
@@ -259,6 +290,13 @@ html, body {
   var logoutBtn = document.getElementById('logoutBtn');
   var updatedAt = document.getElementById('updatedAt');
   var dashBody = document.getElementById('dashBody');
+  var periodAllBtn = document.getElementById('periodAllBtn');
+  var periodLaunchBtn = document.getElementById('periodLaunchBtn');
+  var periodNote = document.getElementById('periodNote');
+
+  // 集計期間(データの削除・変更は一切行わず、/statsへの問い合わせ時に
+  // ?period=で絞り込むだけ)。既定は「全期間」。
+  var currentPeriod = 'all';
 
   function getSavedPw() {
     try { return sessionStorage.getItem(SESSION_KEY) || ''; } catch (e) { return ''; }
@@ -300,8 +338,9 @@ html, body {
     dashView.hidden = false;
   }
 
-  function fetchStats(pw) {
-    return fetch(API + '/stats', { headers: { 'X-Admin-Password': pw } }).then(function (res) {
+  function fetchStats(pw, period) {
+    var qs = period === 'launch' ? '?period=launch' : '';
+    return fetch(API + '/stats' + qs, { headers: { 'X-Admin-Password': pw } }).then(function (res) {
       if (res.status === 401) throw new Error('unauthorized');
       if (!res.ok) throw new Error('failed');
       return res.json();
@@ -312,7 +351,7 @@ html, body {
     loginError.textContent = '';
     loginBtn.disabled = true;
     loginBtn.textContent = '確認中…';
-    fetchStats(pw)
+    fetchStats(pw, currentPeriod)
       .then(function (data) {
         savePw(pw);
         showDash();
@@ -335,7 +374,7 @@ html, body {
     var pw = getSavedPw();
     if (!pw) { showLogin(''); return; }
     dashBody.innerHTML = '<div class="state-box">読み込み中…</div>';
-    fetchStats(pw)
+    fetchStats(pw, currentPeriod)
       .then(function (data) { render(data); })
       .catch(function (err) {
         if (err.message === 'unauthorized') {
@@ -480,6 +519,13 @@ html, body {
 
     dashBody.innerHTML = html;
     updatedAt.textContent = '最終更新: ' + new Date(data.generatedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+
+    if (data.period === 'launch') {
+      var launchLabel = data.launchAt ? new Date(data.launchAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) : '';
+      periodNote.textContent = '🎉 正式公開(' + launchLabel + ')以降のデータのみ集計しています';
+    } else {
+      periodNote.textContent = 'テスト期間分も含む全期間のデータを集計しています';
+    }
   }
 
   loginBtn.addEventListener('click', function () {
@@ -496,6 +542,16 @@ html, body {
     pwInput.value = '';
     showLogin('');
   });
+
+  function setPeriod(period) {
+    if (period === currentPeriod) return;
+    currentPeriod = period;
+    periodAllBtn.classList.toggle('active', period === 'all');
+    periodLaunchBtn.classList.toggle('active', period === 'launch');
+    refresh();
+  }
+  periodAllBtn.addEventListener('click', function () { setPeriod('all'); });
+  periodLaunchBtn.addEventListener('click', function () { setPeriod('launch'); });
 
   var savedPw = getSavedPw();
   if (savedPw) {
