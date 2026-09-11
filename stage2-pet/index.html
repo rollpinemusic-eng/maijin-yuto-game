@@ -55,6 +55,14 @@ html, body {
   background-position: center 20%;
   overflow: hidden;
   transition: transform 0.12s ease;
+  /* title-block(説明文)とspeech-bubble(セリフ)を、互いに衝突しない
+     flexレイアウトで上下配置する(旧: 両方とも独立したposition:absoluteで
+     上端/下端に固定していたため、環境によってheroの実高さが変わると
+     間隔が詰まって重なる不具合があった)。他の演出要素は従来通り
+     position:absoluteのままなので、このflex化の影響を受けない。 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .hero.hit {
@@ -385,11 +393,12 @@ html, body {
 }
 
 .title-block {
-  position: absolute;
-  top: 14px;
-  left: 14px;
+  position: relative;
   z-index: 2;
   max-width: 68%;
+  flex: 0 0 auto;
+  padding: 14px 0 0 14px;
+  box-sizing: border-box;
 }
 
 .title-eyebrow {
@@ -436,10 +445,7 @@ html, body {
 /* 吹き出しは顔にかからないよう、ヒーロー下端の帯として配置する
    (顔・表情は常に見える状態を保つ) */
 .speech-bubble {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 8px;
+  position: relative;
   z-index: 5;
   max-width: none;
   background: rgba(10, 5, 18, 0.88);
@@ -448,6 +454,9 @@ html, body {
   padding: 8px 14px;
   backdrop-filter: blur(2px);
   text-align: center;
+  flex: 0 0 auto;
+  margin: 0 10px 8px;
+  box-sizing: border-box;
 }
 
 .speech-bubble p {
