@@ -386,7 +386,10 @@ html, body {
 
 .title-block {
   position: absolute;
-  top: 14px;
+  /* Instagram/TikTok内ブラウザ等で.heroの実高さがSafariより約24px縮む
+     環境でも、.speech-bubbleと重ならないよう上端の余白をわずかに
+     詰めている(.heroのサイズ・構造自体は変更していない)。 */
+  top: 8px;
   left: 14px;
   z-index: 2;
   max-width: 68%;
@@ -409,7 +412,7 @@ html, body {
 }
 
 .title-main {
-  margin: 2px 0 6px;
+  margin: 2px 0 3px;
   font-size: 46px;
   line-height: 1;
   background: linear-gradient(180deg, #e9d5ff 0%, #a855f7 55%, #6d28d9 100%);
@@ -422,30 +425,32 @@ html, body {
 /* 「魔神ゆうと」より長い名前を持つ敵キャラ用の縮小版タイトル */
 .title-main.small-name {
   font-size: 24px;
-  line-height: 1.3;
+  line-height: 1.15;
 }
 
 .title-desc {
   margin: 0;
   font-size: 11px;
-  line-height: 1.6;
+  line-height: 1.4;
   color: #cdbdea;
   text-shadow: 0 1px 3px #000;
 }
 
 /* 吹き出しは顔にかからないよう、ヒーロー下端の帯として配置する
-   (顔・表情は常に見える状態を保つ) */
+   (顔・表情は常に見える状態を保つ)。Instagram/TikTok内ブラウザ等で
+   .heroの実高さが縮む環境でも.title-blockと重ならないよう、下端の
+   余白・内側paddingをわずかに詰めている(.hero自体は変更していない)。 */
 .speech-bubble {
   position: absolute;
   left: 10px;
   right: 10px;
-  bottom: 8px;
+  bottom: 4px;
   z-index: 5;
   max-width: none;
   background: rgba(10, 5, 18, 0.88);
   border: 1px solid rgba(196, 160, 255, 0.4);
   border-radius: 14px;
-  padding: 8px 14px;
+  padding: 6px 14px;
   backdrop-filter: blur(2px);
   text-align: center;
 }
@@ -453,7 +458,7 @@ html, body {
 .speech-bubble p {
   margin: 0;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.35;
   color: #efe6ff;
 }
 
